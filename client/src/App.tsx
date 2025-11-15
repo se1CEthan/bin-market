@@ -3,28 +3,53 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { ChatWidget } from "@/components/ChatWidget";
+import Home from "@/pages/Home";
+import BotListing from "@/pages/BotListing";
+import BotDetail from "@/pages/BotDetail";
+import DeveloperDashboard from "@/pages/DeveloperDashboard";
+import UploadBot from "@/pages/UploadBot";
+import DeveloperSignup from "@/pages/DeveloperSignup";
+import AdminDashboard from "@/pages/AdminDashboard";
+import Account from "@/pages/Account";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
-    <Switch>
-      {/* Add pages below */}
-      {/* <Route path="/" component={Home}/> */}
-      {/* Fallback to 404 */}
-      <Route component={NotFound} />
-    </Switch>
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <main className="flex-1">
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/bots" component={BotListing} />
+          <Route path="/bot/:id" component={BotDetail} />
+          <Route path="/developer/dashboard" component={DeveloperDashboard} />
+          <Route path="/developer/upload" component={UploadBot} />
+          <Route path="/developer/signup" component={DeveloperSignup} />
+          <Route path="/admin/dashboard" component={AdminDashboard} />
+          <Route path="/account" component={Account} />
+          <Route path="/account/purchases" component={Account} />
+          <Route component={NotFound} />
+        </Switch>
+      </main>
+      <Footer />
+      <ChatWidget />
+    </div>
   );
 }
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <AuthProvider>
+          <Router />
+        </AuthProvider>
         <Toaster />
-        <Router />
       </TooltipProvider>
     </QueryClientProvider>
   );
 }
-
-export default App;
