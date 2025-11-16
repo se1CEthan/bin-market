@@ -19,6 +19,8 @@ declare module 'http' {
 }
 
 // Session configuration with PostgreSQL store
+app.set('trust proxy', 1); // Trust Render's proxy
+
 app.use(session({
   store: new PgSession({
     pool: pool,
@@ -28,11 +30,13 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
+  proxy: true, // Trust the reverse proxy
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: true, // Always use secure in production
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    sameSite: 'none', // Required for OAuth redirects
+    domain: process.env.NODE_ENV === 'production' ? '.braininspirednetwork.cloud' : undefined,
   },
 }));
 

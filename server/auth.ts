@@ -81,6 +81,8 @@ export function setupAuth(app: Express) {
     app.get('/api/auth/google/callback',
       passport.authenticate('google', { failureRedirect: '/' }),
       (req, res) => {
+        console.log('Auth callback - User:', req.user ? 'authenticated' : 'not authenticated');
+        console.log('Auth callback - Session ID:', req.sessionID);
         res.redirect('/');
       }
     );
@@ -97,6 +99,8 @@ export function setupAuth(app: Express) {
   });
 
   app.get('/api/auth/me', (req, res) => {
+    console.log('Auth check - User:', req.user ? 'authenticated' : 'not authenticated');
+    console.log('Auth check - Session ID:', req.sessionID);
     if (req.user) {
       res.json({ user: req.user });
     } else {
