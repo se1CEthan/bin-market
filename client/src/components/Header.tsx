@@ -33,7 +33,6 @@ export function Header() {
           <Link href="/">
             <div className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md p-2 -ml-2 cursor-pointer" data-testid="link-home">
               <img src={logoUrl} alt="BIN Logo" className="h-8 w-auto" />
-              <span className="font-display text-xl font-bold hidden sm:inline">BIN</span>
             </div>
           </Link>
 
