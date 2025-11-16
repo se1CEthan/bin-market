@@ -3,11 +3,14 @@
 ## Project Overview
 BIN is a fully functional dark-themed bot marketplace where users can browse, buy, and download automation bots. Developers can upload and sell bots while keeping 95% of sales revenue. The platform includes Google OAuth authentication, PayPal payment integration, developer and admin dashboards, real-time WebSocket chat, and is production-ready.
 
-## Recent Changes (November 15, 2025)
-- Fixed icon naming conflict (`Bot` → `BotIcon` from lucide-react) in Home.tsx and BotListing.tsx
-- Made Google OAuth optional to allow development without credentials (configured in server/auth.ts)
-- Fixed nested anchor tag issues in Header.tsx and Footer.tsx (React DOM nesting warnings)
-- Application now starts successfully and serves on port 5000
+## Recent Changes (November 16, 2025)
+- ✅ **Disconnected from Replit** - Removed all Replit-specific dependencies
+- ✅ **Standard PostgreSQL** - Replaced Neon serverless with standard node-postgres
+- ✅ **Environment Variables** - Added dotenv support with .env file
+- ✅ **Docker Support** - Added Dockerfile and docker-compose.yml
+- ✅ **Deployment Ready** - Can now deploy to any platform (Vercel, Railway, Render, AWS, etc.)
+- ✅ **Local Development** - Added setup script for local PostgreSQL
+- ✅ **Documentation** - Added comprehensive README.md and DEPLOYMENT.md
 
 ## Tech Stack
 - **Frontend**: React 18.3.1, Wouter (routing), TanStack Query, Tailwind CSS, Shadcn UI
