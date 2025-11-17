@@ -34,7 +34,13 @@ export default function BotListing() {
   });
 
   const { data: bots, isLoading } = useQuery<(Bot & { developer: { name: string; avatarUrl: string | null }; category: { name: string } })[]>({
-    queryKey: ['/api/bots', { search: searchQuery, categories: selectedCategories, sortBy, minPrice: priceRange[0], maxPrice: priceRange[1] }],
+    queryKey: ['/api/bots', { 
+      search: searchQuery, 
+      category: selectedCategories[0], // Backend expects single category
+      sortBy, 
+      minPrice: priceRange[0], 
+      maxPrice: priceRange[1] 
+    }],
   });
 
   const toggleCategory = (categoryId: string) => {
