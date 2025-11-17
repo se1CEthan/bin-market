@@ -290,6 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const developerEarnings = (amount * 0.95).toFixed(2);
 
       // Create PayPal order
+      console.log('Creating PayPal order for bot:', bot.id, 'price:', bot.price);
       const paypalResponse = await fetch(`${req.protocol}://${req.get('host')}/api/paypal/order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -301,10 +302,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (!paypalResponse.ok) {
-        throw new Error('Failed to create PayPal order');
+        const errorText = await paypalResponse.text();
+        console.error('PayPal order creation failed:', errorText);
+        throw new Error(`Failed to create PayPal order: ${errorText}`);
       }
 
       const paypalOrder = await paypalResponse.json();
+      console.log('PayPal order created:', paypalOrder.id);
 
       // Create transaction record
       const transaction = await storage.createTransaction({
