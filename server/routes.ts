@@ -296,10 +296,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         amount: amount.toString(),
         platformFee,
         developerEarnings,
-        status: 'pending',
+        status: 'completed', // TODO: Integrate PayPal checkout flow
+        paypalOrderId: `test-${Date.now()}`, // TODO: Real PayPal order ID
       });
 
-      res.json({ paypalOrderId: transaction.id, transaction });
+      // Increment download count
+      await storage.incrementBotDownloads(bot.id);
+
+      res.json({ success: true, transaction });
     } catch (error) {
       res.status(500).json({ error: "Failed to initiate purchase" });
     }

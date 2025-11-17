@@ -47,17 +47,20 @@ export default function BotDetail() {
   const purchaseMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest('POST', `/api/bots/${botId}/purchase`, {});
-      return response;
+      return response.json();
     },
-    onSuccess: (data) => {
-      if (data.paypalOrderId) {
-        window.location.href = `/checkout/${data.paypalOrderId}`;
-      }
+    onSuccess: () => {
+      toast({
+        title: 'Purchase Successful!',
+        description: 'You can now download the bot.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/bots', botId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/account/purchases'] });
     },
     onError: () => {
       toast({
         title: 'Purchase Failed',
-        description: 'Unable to initiate purchase. Please try again.',
+        description: 'Unable to complete purchase. Please try again.',
         variant: 'destructive',
       });
     },
