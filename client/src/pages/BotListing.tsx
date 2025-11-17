@@ -33,14 +33,19 @@ export default function BotListing() {
     queryKey: ['/api/categories'],
   });
 
+  // Build query string
+  const queryParams = new URLSearchParams();
+  if (searchQuery) queryParams.append('search', searchQuery);
+  if (selectedCategories[0]) queryParams.append('category', selectedCategories[0]);
+  if (sortBy) queryParams.append('sortBy', sortBy);
+  if (priceRange[0] > 0) queryParams.append('minPrice', priceRange[0].toString());
+  if (priceRange[1] < 1000) queryParams.append('maxPrice', priceRange[1].toString());
+  
+  const queryString = queryParams.toString();
+  const apiUrl = `/api/bots${queryString ? `?${queryString}` : ''}`;
+
   const { data: bots, isLoading } = useQuery<(Bot & { developer: { name: string; avatarUrl: string | null }; category: { name: string } })[]>({
-    queryKey: ['/api/bots', { 
-      search: searchQuery, 
-      category: selectedCategories[0], // Backend expects single category
-      sortBy, 
-      minPrice: priceRange[0], 
-      maxPrice: priceRange[1] 
-    }],
+    queryKey: [apiUrl],
   });
 
   const toggleCategory = (categoryId: string) => {
