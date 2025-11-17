@@ -15,6 +15,7 @@ import UploadBot from "@/pages/UploadBot";
 import DeveloperSignup from "@/pages/DeveloperSignup";
 import AdminDashboard from "@/pages/AdminDashboard";
 import Account from "@/pages/Account";
+import PaymentSuccess from "@/pages/PaymentSuccess";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -32,6 +33,7 @@ function Router() {
           <Route path="/admin/dashboard" component={AdminDashboard} />
           <Route path="/account" component={Account} />
           <Route path="/account/purchases" component={Account} />
+          <Route path="/payment/success/:botId" component={PaymentSuccess} />
           <Route component={NotFound} />
         </Switch>
       </main>

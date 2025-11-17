@@ -289,6 +289,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const platformFee = (amount * 0.05).toFixed(2);
       const developerEarnings = (amount * 0.95).toFixed(2);
 
+      // Create PayPal order
+      const paypalResponse = await fetch(`${req.protocol}://${req.get('host')}/api/paypal/order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: bot.price,
+          currency: 'USD',
+          intent: 'CAPTURE'
+        })
+      });
+
+      if (!paypalResponse.ok) {
+        throw new Error('Failed to create PayPal order');
+      }
+
+      const paypalOrder = await paypalResponse.json();
+
+      // Create transaction record
       const transaction = await storage.createTransaction({
         buyerId: (req.user as any).id,
         botId: bot.id,
@@ -296,16 +314,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         amount: amount.toString(),
         platformFee,
         developerEarnings,
-        status: 'completed', // TODO: Integrate PayPal checkout flow
-        paypalOrderId: `test-${Date.now()}`, // TODO: Real PayPal order ID
+        status: 'pending',
+        paypalOrderId: paypalOrder.id,
       });
 
-      // Increment download count
-      await storage.incrementBotDownloads(bot.id);
-
-      res.json({ success: true, transaction });
+      res.json({ 
+        success: true, 
+        paypalOrderId: paypalOrder.id,
+        approvalUrl: paypalOrder.links.find((link: any) => link.rel === 'approve')?.href,
+        transaction 
+      });
     } catch (error) {
+      console.error('Purchase error:', error);
       res.status(500).json({ error: "Failed to initiate purchase" });
+    }
+  });
+
+  // Capture PayPal payment after user approves
+  app.post("/api/bots/:id/capture/:orderId", requireAuth, async (req, res) => {
+    try {
+      const { orderId } = req.params;
+
+      // Capture the PayPal order
+      const captureResponse = await fetch(`${req.protocol}://${req.get('host')}/api/paypal/order/${orderId}/capture`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!captureResponse.ok) {
+        throw new Error('Failed to capture PayPal payment');
+      }
+
+      const captureData = await captureResponse.json();
+
+      // Update transaction status
+      const transaction = await storage.getTransactionByPaypalOrderId(orderId);
+      if (transaction) {
+        await storage.updateTransactionStatus(transaction.id, 'completed');
+        
+        // Increment download count
+        const bot = await storage.getBotById(req.params.id);
+        if (bot) {
+          await storage.incrementBotDownloads(bot.id);
+        }
+      }
+
+      res.json({ success: true, captureData });
+    } catch (error) {
+      console.error('Capture error:', error);
+      res.status(500).json({ error: "Failed to capture payment" });
     }
   });
 

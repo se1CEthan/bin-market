@@ -16,13 +16,17 @@ export default function DeveloperSignup() {
     mutationFn: async () => {
       return await apiRequest('POST', '/api/developer/signup', {});
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: 'Welcome, Developer!',
         description: 'You can now upload and sell bots on the marketplace.',
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
-      navigate('/developer/dashboard');
+      // Wait for the user data to refresh before navigating
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/auth/me'] });
+      setTimeout(() => {
+        navigate('/developer/dashboard');
+      }, 500);
     },
     onError: () => {
       toast({

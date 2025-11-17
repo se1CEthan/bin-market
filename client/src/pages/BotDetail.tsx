@@ -49,13 +49,18 @@ export default function BotDetail() {
       const response = await apiRequest('POST', `/api/bots/${botId}/purchase`, {});
       return response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: 'Purchase Successful!',
-        description: 'You can now download the bot.',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/bots', botId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/account/purchases'] });
+    onSuccess: (data) => {
+      if (data.approvalUrl) {
+        // Redirect to PayPal for payment
+        window.location.href = data.approvalUrl;
+      } else {
+        toast({
+          title: 'Purchase Successful!',
+          description: 'You can now download the bot.',
+        });
+        queryClient.invalidateQueries({ queryKey: ['/api/bots', botId] });
+        queryClient.invalidateQueries({ queryKey: ['/api/account/purchases'] });
+      }
     },
     onError: () => {
       toast({
