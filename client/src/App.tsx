@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ChatWidget } from "@/components/ChatWidget";
+import { AdSense } from "@/components/AdSense";
 import Home from "@/pages/Home";
 import BotListing from "@/pages/BotListing";
 import BotDetail from "@/pages/BotDetail";
@@ -22,6 +23,7 @@ function Router() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
+      <AdSense />
       <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />
