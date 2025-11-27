@@ -98,6 +98,8 @@ export function setupAuth(app: Express) {
         const pendingUserType = (req.session as any).pendingUserType;
         const pendingPaypalEmail = (req.session as any).pendingPaypalEmail;
         
+        let redirectUrl = '/';
+        
         if (req.user && pendingUserType === 'developer') {
           const userId = (req.user as any).id;
           const updates: any = { isDeveloper: true };
@@ -109,13 +111,17 @@ export function setupAuth(app: Express) {
           
           await storage.updateUser(userId, updates);
           console.log('User upgraded to developer with PayPal:', pendingPaypalEmail || 'none');
+          redirectUrl = '/developer/dashboard';
+        } else if (req.user && pendingUserType === 'buyer') {
+          // Redirect buyers to buyer dashboard
+          redirectUrl = '/buyer/dashboard';
         }
         
         // Clear pending data from session
         delete (req.session as any).pendingUserType;
         delete (req.session as any).pendingPaypalEmail;
         
-        res.redirect('/');
+        res.redirect(redirectUrl);
       }
     );
   } else {
