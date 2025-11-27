@@ -443,6 +443,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chat routes
+  app.get("/api/chat/messages/:userId/:otherUserId", requireAuth, async (req, res) => {
+    try {
+      const { userId, otherUserId } = req.params;
+      
+      // Verify the requesting user is one of the participants
+      if ((req.user as any).id !== userId && (req.user as any).id !== otherUserId) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
+      const messages = await storage.getMessagesBetween(userId, otherUserId);
+      
+      // Add sender info to messages
+      const messagesWithSender = await Promise.all(
+        messages.map(async (msg) => {
+          const sender = await storage.getUser(msg.senderId);
+          return {
+            ...msg,
+            sender: sender ? { name: sender.name, avatarUrl: sender.avatarUrl } : null,
+          };
+        })
+      );
+
+      res.json(messagesWithSender);
+    } catch (error) {
+      console.error('Chat messages error:', error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
   // Protected routes - User account
   app.get("/api/account/purchases", requireAuth, async (req, res) => {
     try {

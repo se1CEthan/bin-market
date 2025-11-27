@@ -24,6 +24,7 @@ import {
 import type { Bot, Review } from '@shared/schema';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { TestBox } from '@/components/TestBox';
+import { ChatSystem } from '@/components/ChatSystem';
 
 export default function BotDetail() {
   const [, params] = useRoute('/bot/:id');
@@ -227,15 +228,13 @@ export default function BotDetail() {
                       </a>
                     </Link>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!user || user.id === bot.developer.id}
-                    data-testid="button-message-developer"
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Message
-                  </Button>
+                  <ChatSystem
+                    recipientId={bot.developer.id}
+                    recipientName={bot.developer.name}
+                    recipientAvatar={bot.developer.avatarUrl}
+                    botId={bot.id}
+                    botTitle={bot.title}
+                  />
                 </div>
               </Card>
             </div>
