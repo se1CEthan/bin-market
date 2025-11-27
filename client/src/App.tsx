@@ -11,6 +11,7 @@ import Login from "@/pages/Login";
 import Home from "@/pages/Home";
 import BotListing from "@/pages/BotListing";
 import BotDetail from "@/pages/BotDetail";
+import BotComparison from "@/pages/BotComparison";
 import DeveloperDashboard from "@/pages/DeveloperDashboard";
 import UploadBot from "@/pages/UploadBot";
 import DeveloperSignup from "@/pages/DeveloperSignup";
@@ -28,6 +29,7 @@ function Router() {
           <Route path="/login" component={Login} />
           <Route path="/" component={Home} />
           <Route path="/bots" component={BotListing} />
+          <Route path="/bots/compare" component={BotComparison} />
           <Route path="/bot/:id" component={BotDetail} />
           <Route path="/developer/dashboard" component={DeveloperDashboard} />
           <Route path="/developer/upload" component={UploadBot} />
