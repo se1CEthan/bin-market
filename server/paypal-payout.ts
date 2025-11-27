@@ -1,25 +1,4 @@
-import { PayPalClient } from "@paypal/paypal-server-sdk";
-
 const PLATFORM_PAYPAL_EMAIL = process.env.PLATFORM_PAYPAL_EMAIL || "platform@braininspirednetwork.cloud";
-
-// Initialize PayPal client for payouts
-function getPayPalClient() {
-  const clientId = process.env.PAYPAL_CLIENT_ID;
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
-  const environment = process.env.NODE_ENV === 'production' ? 'production' : 'sandbox';
-
-  if (!clientId || !clientSecret) {
-    throw new Error('PayPal credentials not configured');
-  }
-
-  return new PayPalClient({
-    clientCredentialsAuthCredentials: {
-      oAuthClientId: clientId,
-      oAuthClientSecret: clientSecret,
-    },
-    environment,
-  });
-}
 
 /**
  * Send automatic payout to developer (95%) after a sale
@@ -32,7 +11,6 @@ export async function sendAutomaticPayout(
   transactionId: string
 ): Promise<{ success: boolean; payoutId?: string; error?: string }> {
   try {
-    const client = getPayPalClient();
     
     // Calculate 95% for developer
     const developerAmount = (amount * 0.95).toFixed(2);
