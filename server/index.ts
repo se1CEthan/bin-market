@@ -32,10 +32,10 @@ app.use(session({
   saveUninitialized: false,
   proxy: true, // Trust the reverse proxy
   cookie: {
-    secure: true, // Always use secure in production
+    secure: process.env.NODE_ENV === 'production', // Secure only in production
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: 'none', // Required for OAuth redirects
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for production, 'lax' for dev
     domain: process.env.NODE_ENV === 'production' ? '.braininspirednetwork.cloud' : undefined,
   },
 }));
