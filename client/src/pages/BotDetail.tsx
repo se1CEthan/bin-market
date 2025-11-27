@@ -18,10 +18,12 @@ import {
   MessageSquare, 
   CheckCircle2,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  Terminal
 } from 'lucide-react';
 import type { Bot, Review } from '@shared/schema';
 import { queryClient, apiRequest } from '@/lib/queryClient';
+import { TestBox } from '@/components/TestBox';
 
 export default function BotDetail() {
   const [, params] = useRoute('/bot/:id');
@@ -242,6 +244,10 @@ export default function BotDetail() {
             <Tabs defaultValue="description" className="w-full">
               <TabsList className="w-full justify-start">
                 <TabsTrigger value="description" data-testid="tab-description">Description</TabsTrigger>
+                <TabsTrigger value="testbox" data-testid="tab-testbox">
+                  <Terminal className="h-4 w-4 mr-2" />
+                  Try Demo
+                </TabsTrigger>
                 <TabsTrigger value="reviews" data-testid="tab-reviews">Reviews ({bot.reviewCount})</TabsTrigger>
                 <TabsTrigger value="support" data-testid="tab-support">Support</TabsTrigger>
               </TabsList>
@@ -284,6 +290,13 @@ export default function BotDetail() {
                     </CardContent>
                   </Card>
                 )}
+              </TabsContent>
+
+              <TabsContent value="testbox" className="space-y-4">
+                <TestBox 
+                  botTitle={bot.title}
+                  botDescription={bot.description}
+                />
               </TabsContent>
 
               <TabsContent value="reviews" className="space-y-4">
