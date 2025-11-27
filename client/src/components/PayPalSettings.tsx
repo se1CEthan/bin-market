@@ -141,15 +141,29 @@ export function PayPalSettings() {
             </div>
           )}
 
-          {!paypalEnabled && (
+          {!paypalEnabled && paypalEmail && (
             <div className="flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 p-4 border border-amber-200 dark:border-amber-900">
               <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-                  Manual Payouts
+                  Automatic Payouts Disabled
                 </p>
                 <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                  You'll need to request payouts manually from the admin
+                  Enable automatic payouts to receive 90% of each sale instantly
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!paypalEmail && (
+            <div className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/20 p-4 border border-blue-200 dark:border-blue-900">
+              <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                  Set Up PayPal
+                </p>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                  Add your PayPal email to start receiving automatic payments
                 </p>
               </div>
             </div>
