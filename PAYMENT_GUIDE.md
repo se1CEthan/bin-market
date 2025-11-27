@@ -91,7 +91,7 @@ NODE_ENV=production
 1. Developer requests payout in their dashboard
 2. You see request in Admin Dashboard with:
    - Developer name
-   - Amount owed (95% of their sales)
+   - Amount owed (90% of their sales)
    - PayPal email
    - Request date
 
@@ -99,7 +99,7 @@ NODE_ENV=production
    - Log in to PayPal.com
    - Click "Send & Request"
    - Enter developer's PayPal email
-   - Enter amount (95% of their sales)
+   - Enter amount (90% of their sales)
    - Add note: "BIN Marketplace - Bot Sales Payout"
    - Send payment
 
@@ -162,9 +162,9 @@ Your Earnings = Total Sales × 0.05
 Example:
 - Total sales: $1,000
 - Your cut: $1,000 × 0.05 = $50
-- Developer cut: $1,000 × 0.95 = $950
+- Developer cut: $1,000 × 0.90 = $900
 
-### Developer Earnings (95%)
+### Developer Earnings (90%)
 
 **Developers see in their dashboard:**
 - Total earnings
@@ -212,8 +212,8 @@ For each purchase:
   botId: "bot-id",
   developerId: "developer-id",
   amount: "29.99",           // Full price
-  platformFee: "1.50",       // 5% (your cut)
-  developerEarnings: "28.49", // 95% (developer cut)
+  platformFee: "3.00",       // 10% (your cut)
+  developerEarnings: "26.99", // 90% (developer cut)
   paypalOrderId: "paypal-order-id",
   status: "completed",
   createdAt: "2024-11-17"
@@ -241,8 +241,8 @@ ORDER BY month DESC;
 
 1. **Week 1-4**: Developer sells bots
    - Total sales: $500
-   - Platform fee (5%): $25 (goes to you)
-   - Developer earnings (95%): $475
+   - Platform fee (10%): $50 (goes to you)
+   - Developer earnings (90%): $450
 
 2. **End of Month**: Developer requests payout
    - Goes to Dashboard → Payouts

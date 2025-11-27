@@ -74,9 +74,9 @@ export default function DeveloperSignup() {
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
               <DollarSign className="h-6 w-6" />
             </div>
-            <h3 className="font-semibold text-lg mb-2">Keep 95%</h3>
+            <h3 className="font-semibold text-lg mb-2">Keep 90%</h3>
             <p className="text-sm text-muted-foreground">
-              Lowest commission in the industry. You keep 95% of every sale.
+              Low commission. You keep 90% of every sale.
             </p>
           </Card>
 

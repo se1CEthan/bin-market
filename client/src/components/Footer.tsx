@@ -11,7 +11,7 @@ export function Footer() {
               <img src={logoUrl} alt="BIN Logo" className="h-10 w-auto object-contain" />
             </div>
             <p className="text-sm text-muted-foreground">
-              The leading marketplace for automation bots. Buy ready-made bots or sell yours and keep 95% profit.
+              The leading marketplace for automation bots. Buy ready-made bots or sell yours and keep 90% profit.
             </p>
           </div>
 

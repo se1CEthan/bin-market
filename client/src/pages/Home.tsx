@@ -59,7 +59,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <Badge className="mb-4" data-testid="badge-hero-label">
               <Zap className="h-3 w-3 mr-1" />
-              95% Earnings for Developers
+              90% Earnings for Developers
             </Badge>
             
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight" data-testid="text-hero-title">
@@ -68,7 +68,7 @@ export default function Home() {
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto" data-testid="text-hero-subtitle">
-              The leading marketplace for automation bots. Buy ready-made bots or sell yours and keep 95% profit.
+              The leading marketplace for automation bots. Buy ready-made bots or sell yours and keep 90% profit.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -137,9 +137,9 @@ export default function Home() {
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
                 <DollarSign className="h-6 w-6" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">Keep 95% as Developer</h3>
+              <h3 className="font-semibold text-lg mb-2">Keep 90% as Developer</h3>
               <p className="text-sm text-muted-foreground">
-                Lowest fees in the world. You build it, you keep almost all of it.
+                Low fees. You build it, you keep most of it.
               </p>
             </Card>
 

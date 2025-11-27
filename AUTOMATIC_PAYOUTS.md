@@ -104,7 +104,7 @@ npm run db:push
 3. **Automatic Split**
    ```
    If developer has PayPal enabled:
-     - Calculate 95% for developer
+     - Calculate 90% for developer
      - Send payout via PayPal Payouts API
      - Developer receives payment instantly
      - Platform keeps 5% automatically
@@ -137,12 +137,12 @@ Developers see a clear interface in their dashboard:
 │ ☑ Enable Automatic Payouts          │
 │                                     │
 │ ✓ Automatic Payouts Active          │
-│   You'll receive 95% of each sale   │
+│   You'll receive 90% of each sale   │
 │   automatically to your@email.com   │
 │                                     │
 │ How it works:                       │
 │ • Payment captured by platform      │
-│ • 95% sent to you automatically     │
+│ • 90% sent to you automatically     │
 │ • 5% kept as platform commission    │
 │ • Track all payouts in dashboard    │
 │                                     │

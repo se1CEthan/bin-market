@@ -159,7 +159,7 @@ export default function UploadBot() {
         <div className="mb-8">
           <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">Upload New Bot</h1>
           <p className="text-muted-foreground">
-            Share your automation bot with the community and earn 95% of each sale
+            Share your automation bot with the community and earn 90% of each sale
           </p>
         </div>
 
@@ -220,7 +220,7 @@ export default function UploadBot() {
                           />
                         </FormControl>
                         <FormDescription>
-                          You keep 95% of each sale
+                          You keep 90% of each sale
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
