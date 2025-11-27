@@ -14,6 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useAuth } from '@/contexts/AuthContext';
+import { PayPalSettings } from '@/components/PayPalSettings';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -162,6 +163,7 @@ export default function DeveloperDashboard() {
             <TabsTrigger value="bots" data-testid="tab-my-bots">My Bots</TabsTrigger>
             <TabsTrigger value="sales" data-testid="tab-sales">Sales</TabsTrigger>
             <TabsTrigger value="payouts" data-testid="tab-payouts">Payouts</TabsTrigger>
+            <TabsTrigger value="settings" data-testid="tab-settings">PayPal Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -363,6 +365,10 @@ export default function DeveloperDashboard() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <PayPalSettings />
           </TabsContent>
         </Tabs>
       </div>

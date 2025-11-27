@@ -13,6 +13,8 @@ export const users = pgTable("users", {
   googleId: text("google_id").unique(),
   isDeveloper: boolean("is_developer").default(false).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  paypalEmail: text("paypal_email"), // Developer's PayPal email for automatic payouts
+  paypalEnabled: boolean("paypal_enabled").default(false).notNull(), // Whether automatic payouts are enabled
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

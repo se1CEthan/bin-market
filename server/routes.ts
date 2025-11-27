@@ -156,6 +156,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/developer/paypal", requireDeveloper, async (req, res) => {
+    try {
+      const { paypalEmail, paypalEnabled } = req.body;
+      
+      if (!paypalEmail || typeof paypalEmail !== 'string') {
+        return res.status(400).json({ error: "Valid PayPal email is required" });
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(paypalEmail)) {
+        return res.status(400).json({ error: "Invalid email format" });
+      }
+
+      const user = await storage.updateUser((req.user as any).id, {
+        paypalEmail,
+        paypalEnabled: paypalEnabled !== false, // Default to true
+      });
+
+      res.json({ 
+        success: true,
+        paypalEmail: user?.paypalEmail,
+        paypalEnabled: user?.paypalEnabled,
+      });
+    } catch (error) {
+      console.error('PayPal setup error:', error);
+      res.status(500).json({ error: "Failed to update PayPal settings" });
+    }
+  });
+
+  app.get("/api/developer/paypal", requireDeveloper, async (req, res) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      res.json({
+        paypalEmail: user?.paypalEmail || null,
+        paypalEnabled: user?.paypalEnabled || false,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch PayPal settings" });
+    }
+  });
+
   app.get("/api/developer/stats", requireDeveloper, async (req, res) => {
     try {
       const stats = await storage.getDeveloperStats((req.user as any).id);
@@ -360,6 +402,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const bot = await storage.getBotById(req.params.id);
         if (bot) {
           await storage.incrementBotDownloads(bot.id);
+          
+          // Send automatic payout to developer if PayPal is enabled
+          const developer = await storage.getUser(bot.developerId);
+          if (developer?.paypalEnabled && developer?.paypalEmail) {
+            try {
+              const { sendAutomaticPayout } = await import('./paypal-payout');
+              const amount = parseFloat(transaction.amount);
+              
+              const payoutResult = await sendAutomaticPayout(
+                developer.paypalEmail,
+                amount,
+                bot.title,
+                transaction.id
+              );
+
+              if (payoutResult.success) {
+                console.log(`Automatic payout sent to ${developer.paypalEmail}: $${(amount * 0.95).toFixed(2)}`);
+                // Update transaction with payout info
+                await storage.updateTransaction(transaction.id, {
+                  status: 'completed',
+                });
+              } else {
+                console.error('Automatic payout failed:', payoutResult.error);
+                // Transaction is still completed, but payout failed
+                // Admin can manually process or retry
+              }
+            } catch (payoutError) {
+              console.error('Payout processing error:', payoutError);
+              // Continue - payment was captured successfully
+            }
+          }
         }
       }
 
