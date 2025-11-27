@@ -91,7 +91,7 @@ export function PayPalSettings() {
       <CardHeader>
         <CardTitle>Automatic PayPal Payouts</CardTitle>
         <CardDescription>
-          Receive 95% of your sales automatically to your PayPal account. Platform keeps 5%.
+          Receive 90% of your sales automatically to your PayPal account. Platform keeps 10%.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -117,7 +117,7 @@ export function PayPalSettings() {
                 Enable Automatic Payouts
               </Label>
               <p className="text-sm text-muted-foreground">
-                Automatically receive 95% of each sale to your PayPal account
+                Automatically receive 90% of each sale to your PayPal account
               </p>
             </div>
             <Switch
@@ -135,7 +135,7 @@ export function PayPalSettings() {
                   Automatic Payouts Active
                 </p>
                 <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                  You'll receive 95% of each sale automatically to {settings.paypalEmail}
+                  You'll receive 90% of each sale automatically to {settings.paypalEmail}
                 </p>
               </div>
             </div>
@@ -159,8 +159,8 @@ export function PayPalSettings() {
             <h4 className="font-medium text-sm">How it works:</h4>
             <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
               <li>When someone buys your bot, payment goes to the platform</li>
-              <li>95% is automatically sent to your PayPal account within minutes</li>
-              <li>5% is kept by the platform as commission</li>
+              <li>90% is automatically sent to your PayPal account within minutes</li>
+              <li>10% is kept by the platform as commission</li>
               <li>You can track all payouts in your dashboard</li>
             </ul>
           </div>

@@ -4,9 +4,9 @@
 
 ### Current Setup: Manual Payout System
 
-Your marketplace uses **PayPal** for payments with a **95/5 revenue split**:
-- **Developer gets**: 95% of sale price
-- **Platform (you) gets**: 5% of sale price
+Your marketplace uses **PayPal** for payments with a **90/10 revenue split**:
+- **Developer gets**: 90% of sale price
+- **Platform (you) gets**: 10% of sale price
 
 ## 🔄 Payment Flow
 
@@ -21,8 +21,8 @@ Buyer pays with PayPal/Credit Card
 Full amount goes to YOUR PayPal account
     ↓
 Transaction recorded in database with split:
-  - Platform Fee (5%)
-  - Developer Earnings (95%)
+  - Platform Fee (10%)
+  - Developer Earnings (90%)
 ```
 
 ### 2. Developer Requests Payout

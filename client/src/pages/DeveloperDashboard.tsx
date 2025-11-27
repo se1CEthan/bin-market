@@ -110,7 +110,7 @@ export default function DeveloperDashboard() {
                   <p className="font-mono text-3xl font-bold text-primary" data-testid="text-total-earnings">
                     ${stats?.totalEarnings || '0.00'}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">95% of all sales</p>
+                  <p className="text-xs text-muted-foreground mt-1">90% of all sales</p>
                 </CardContent>
               </Card>
 

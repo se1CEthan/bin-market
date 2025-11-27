@@ -1,7 +1,7 @@
 =======
 # BIN (Brain Inspired Network) - Bot Marketplace
 
-A fully functional dark-themed bot marketplace where users can browse, buy, and download automation bots. Developers can upload and sell bots while keeping 95% of sales revenue.
+A fully functional dark-themed bot marketplace where users can browse, buy, and download automation bots. Developers can upload and sell bots while keeping 90% of sales revenue.
 
 ## Features
 
@@ -139,7 +139,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions for va
 - Upload new bots with files and thumbnails
 - Track sales and earnings
 - Manage bot listings
-- 95% revenue share
+- 90% revenue share
 
 ### Admin Dashboard
 - Manage featured bots

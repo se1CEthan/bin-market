@@ -1,8 +1,8 @@
 const PLATFORM_PAYPAL_EMAIL = process.env.PLATFORM_PAYPAL_EMAIL || "platform@braininspirednetwork.cloud";
 
 /**
- * Send automatic payout to developer (95%) after a sale
- * Platform keeps 5% automatically
+ * Send automatic payout to developer (90%) after a sale
+ * Platform keeps 10% automatically
  */
 export async function sendAutomaticPayout(
   developerPaypalEmail: string,
@@ -12,8 +12,8 @@ export async function sendAutomaticPayout(
 ): Promise<{ success: boolean; payoutId?: string; error?: string }> {
   try {
     
-    // Calculate 95% for developer
-    const developerAmount = (amount * 0.95).toFixed(2);
+    // Calculate 90% for developer
+    const developerAmount = (amount * 0.90).toFixed(2);
     
     // Create payout batch
     const payoutBatch = {
@@ -30,7 +30,7 @@ export async function sendAutomaticPayout(
             currency: "USD",
           },
           receiver: developerPaypalEmail,
-          note: `Bot sale: ${botTitle} - Developer earnings (95%)`,
+          note: `Bot sale: ${botTitle} - Developer earnings (90%)`,
           sender_item_id: transactionId,
         },
       ],

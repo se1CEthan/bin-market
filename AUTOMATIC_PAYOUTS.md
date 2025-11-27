@@ -3,8 +3,8 @@
 ## Overview
 
 The BIN Marketplace now supports **automatic PayPal payouts** for developers. When a buyer purchases a bot, the payment is automatically split:
-- **95%** goes directly to the developer's PayPal account
-- **5%** stays with the platform
+- **90%** goes directly to the developer's PayPal account
+- **10%** stays with the platform
 
 ## How It Works
 
@@ -18,14 +18,14 @@ The BIN Marketplace now supports **automatic PayPal payouts** for developers. Wh
 
 2. **Receive Automatic Payments**
    - When someone buys your bot, payment is captured by the platform
-   - Within minutes, 95% is automatically sent to your PayPal account
+   - Within minutes, 90% is automatically sent to your PayPal account
    - You'll receive a PayPal notification
    - Track all payouts in your dashboard
 
 3. **Benefits**
    - Instant payments (no waiting for manual processing)
    - No payout requests needed
-   - Automatic 95/5 split
+   - Automatic 90/10 split
    - Full transparency
 
 ### For Platform Owner

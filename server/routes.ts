@@ -328,8 +328,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const amount = parseFloat(bot.price);
-      const platformFee = (amount * 0.05).toFixed(2);
-      const developerEarnings = (amount * 0.95).toFixed(2);
+      const platformFee = (amount * 0.10).toFixed(2);
+      const developerEarnings = (amount * 0.90).toFixed(2);
 
       // Create PayPal order
       console.log('Creating PayPal order for bot:', bot.id, 'price:', bot.price);
@@ -418,7 +418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               );
 
               if (payoutResult.success) {
-                console.log(`Automatic payout sent to ${developer.paypalEmail}: $${(amount * 0.95).toFixed(2)}`);
+                console.log(`Automatic payout sent to ${developer.paypalEmail}: $${(amount * 0.90).toFixed(2)}`);
                 // Update transaction with payout info
                 await storage.updateTransaction(transaction.id, {
                   status: 'completed',
