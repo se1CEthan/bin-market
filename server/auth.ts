@@ -74,15 +74,47 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   if (isGoogleAuthConfigured) {
-    app.get('/api/auth/google', passport.authenticate('google', {
-      scope: ['profile', 'email'],
-    }));
+    app.get('/api/auth/google', (req, res, next) => {
+      // Store user type and PayPal email in session for callback
+      if (req.query.userType) {
+        (req.session as any).pendingUserType = req.query.userType;
+      }
+      if (req.query.paypalEmail) {
+        (req.session as any).pendingPaypalEmail = req.query.paypalEmail;
+      }
+      
+      passport.authenticate('google', {
+        scope: ['profile', 'email'],
+      })(req, res, next);
+    });
 
     app.get('/api/auth/google/callback',
-      passport.authenticate('google', { failureRedirect: '/' }),
-      (req, res) => {
+      passport.authenticate('google', { failureRedirect: '/login' }),
+      async (req, res) => {
         console.log('Auth callback - User:', req.user ? 'authenticated' : 'not authenticated');
         console.log('Auth callback - Session ID:', req.sessionID);
+        
+        // Check if user selected developer role during signup
+        const pendingUserType = (req.session as any).pendingUserType;
+        const pendingPaypalEmail = (req.session as any).pendingPaypalEmail;
+        
+        if (req.user && pendingUserType === 'developer') {
+          const userId = (req.user as any).id;
+          const updates: any = { isDeveloper: true };
+          
+          if (pendingPaypalEmail) {
+            updates.paypalEmail = pendingPaypalEmail;
+            updates.paypalEnabled = true;
+          }
+          
+          await storage.updateUser(userId, updates);
+          console.log('User upgraded to developer with PayPal:', pendingPaypalEmail || 'none');
+        }
+        
+        // Clear pending data from session
+        delete (req.session as any).pendingUserType;
+        delete (req.session as any).pendingPaypalEmail;
+        
         res.redirect('/');
       }
     );

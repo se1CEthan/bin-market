@@ -132,11 +132,11 @@ export function Header() {
             </>
           ) : (
             <>
-              <Button variant="ghost" onClick={login} data-testid="button-login">
-                Sign In
+              <Button variant="ghost" asChild data-testid="button-login">
+                <Link href="/login">Sign In</Link>
               </Button>
-              <Button onClick={login} data-testid="button-get-started">
-                Get Started
+              <Button asChild data-testid="button-get-started">
+                <Link href="/login">Get Started</Link>
               </Button>
             </>
           )}

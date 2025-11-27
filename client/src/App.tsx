@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ChatWidget } from "@/components/ChatWidget";
+import Login from "@/pages/Login";
 import Home from "@/pages/Home";
 import BotListing from "@/pages/BotListing";
 import BotDetail from "@/pages/BotDetail";
@@ -24,6 +25,7 @@ function Router() {
       <Header />
       <main className="flex-1">
         <Switch>
+          <Route path="/login" component={Login} />
           <Route path="/" component={Home} />
           <Route path="/bots" component={BotListing} />
           <Route path="/bot/:id" component={BotDetail} />
