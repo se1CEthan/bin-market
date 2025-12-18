@@ -272,3 +272,219 @@ export const gradientShift: Variants = {
     },
   },
 };
+
+// Advanced micro-interactions
+export const microBounce: Variants = {
+  hover: {
+    y: -2,
+    transition: { type: 'spring', stiffness: 400, damping: 10 }
+  },
+  tap: { y: 0 }
+};
+
+export const gentleGlow: Variants = {
+  hover: {
+    boxShadow: '0 0 20px rgba(var(--primary), 0.3)',
+    transition: { duration: 0.3 }
+  }
+};
+
+export const subtleScale: Variants = {
+  hover: { scale: 1.02 },
+  tap: { scale: 0.98 }
+};
+
+// Loading states
+export const breathingPulse: Variants = {
+  animate: {
+    scale: [1, 1.05, 1],
+    opacity: [0.7, 1, 0.7],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    },
+  },
+};
+
+export const wavePulse: Variants = {
+  animate: {
+    scale: [1, 1.2, 1.4, 1.2, 1],
+    opacity: [1, 0.8, 0.6, 0.4, 0],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: 'easeOut',
+    },
+  },
+};
+
+// Text effects
+export const textShimmer: Variants = {
+  animate: {
+    backgroundPosition: ['0% 50%', '100% 50%'],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: 'linear',
+    },
+  },
+};
+
+export const countUp = (target: number, duration: number = 2) => ({
+  animate: {
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+    },
+  },
+  // Custom animation for counting numbers
+});
+
+// Interactive elements
+export const magneticPull = (strength: number = 20) => ({
+  hover: {
+    scale: 1.05,
+    transition: { type: 'spring', stiffness: 300 }
+  }
+});
+
+export const liquidButton: Variants = {
+  hover: {
+    borderRadius: ['8px', '16px', '24px', '16px', '8px'],
+    transition: { duration: 0.6, ease: 'easeInOut' }
+  }
+};
+
+// Page transitions
+export const slideUpFade: Variants = {
+  initial: { opacity: 0, y: 60 },
+  animate: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.6, ease: 'easeOut' }
+  },
+  exit: { 
+    opacity: 0, 
+    y: -60,
+    transition: { duration: 0.4, ease: 'easeIn' }
+  }
+};
+
+export const scaleRotate: Variants = {
+  initial: { scale: 0, rotate: -180 },
+  animate: { 
+    scale: 1, 
+    rotate: 0,
+    transition: { type: 'spring', stiffness: 200, damping: 15 }
+  },
+  exit: { 
+    scale: 0, 
+    rotate: 180,
+    transition: { duration: 0.3 }
+  }
+};
+
+// Complex animations
+export const morphingShape: Variants = {
+  animate: {
+    borderRadius: ['20%', '50%', '30%', '40%', '20%'],
+    rotate: [0, 90, 180, 270, 360],
+    transition: {
+      duration: 8,
+      repeat: Infinity,
+      ease: 'linear',
+    },
+  },
+};
+
+export const liquidBlob: Variants = {
+  animate: {
+    borderRadius: ['30% 70% 70% 30% / 30% 30% 70% 70%', 
+                   '70% 30% 30% 70% / 70% 70% 30% 30%',
+                   '30% 70% 70% 30% / 30% 30% 70% 70%'],
+    transition: {
+      duration: 4,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    },
+  },
+};
+
+// Particle system simulation
+export const particleSystem = (count: number = 5) => ({
+  animate: {
+    y: Array(count).fill(0).map(() => Math.random() * -100 - 50),
+    x: Array(count).fill(0).map(() => Math.random() * 200 - 100),
+    opacity: Array(count).fill(0).map(() => Math.random() * 0.8 + 0.2),
+    transition: {
+      duration: 3,
+      repeat: Infinity,
+      ease: 'easeOut',
+    },
+  },
+});
+
+// Advanced hover states
+export const elevateOnHover: Variants = {
+  hover: {
+    y: -8,
+    boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+    transition: { type: 'spring', stiffness: 300 }
+  }
+};
+
+export const glowOnHover: Variants = {
+  hover: {
+    boxShadow: [
+      '0 0 0 rgba(var(--primary), 0)',
+      '0 0 20px rgba(var(--primary), 0.3)',
+      '0 0 40px rgba(var(--primary), 0.2)',
+    ],
+    transition: { duration: 0.4 }
+  }
+};
+
+// Loading animations
+export const dotsLoading: Variants = {
+  animate: {
+    scale: [1, 1.2, 1],
+    transition: {
+      duration: 0.6,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    },
+  },
+};
+
+export const barsLoading: Variants = {
+  animate: {
+    scaleY: [1, 2, 1],
+    transition: {
+      duration: 0.8,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    },
+  },
+};
+
+// Success/Error states
+export const successPulse: Variants = {
+  animate: {
+    scale: [1, 1.1, 1],
+    backgroundColor: ['#10b981', '#34d399', '#10b981'],
+    transition: {
+      duration: 1,
+      repeat: 2,
+    },
+  },
+};
+
+export const errorShake: Variants = {
+  animate: {
+    x: [-10, 10, -10, 10, 0],
+    transition: {
+      duration: 0.5,
+    },
+  },
+};

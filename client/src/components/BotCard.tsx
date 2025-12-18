@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Star, Download, Eye, ShoppingCart, Heart, Bookmark, Zap, TrendingUp, Crown, Sparkles } from 'lucide-react';
+import { Star, Download, Eye, ShoppingCart, Heart, Bookmark, Zap, TrendingUp, Crown, Sparkles, Tag } from 'lucide-react';
 import { cardHover, morphingCard, glowEffect, staggerItem } from '@/lib/animations';
 import { useState } from 'react';
 import type { Bot } from '@shared/schema';

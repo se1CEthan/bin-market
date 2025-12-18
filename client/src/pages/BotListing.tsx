@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/select';
 import { BotCard } from '@/components/BotCard';
 import { BotGridSkeleton } from '@/components/ui/advanced-skeleton';
-import { AdvancedCard } from '@/components/ui/advanced-card';
 import { InteractiveButton } from '@/components/ui/interactive-button';
 import { 
   pageTransition, 
