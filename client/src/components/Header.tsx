@@ -79,36 +79,36 @@ export function Header() {
       >
 
 
-        <div className="container mx-auto flex h-14 xs:h-16 sm:h-18 md:h-20 items-center justify-between px-2 xs:px-4 md:px-6">
-          <div className="flex items-center gap-2 xs:gap-4 sm:gap-6 md:gap-8">
+        {/* Ultra Mobile-First Header Container */}
+        <div className="flex h-12 xs:h-14 sm:h-16 md:h-18 lg:h-20 items-center justify-between px-2 xs:px-3 sm:px-4 md:px-6 max-w-7xl mx-auto w-full">
+          <div className="flex items-center gap-1 xs:gap-2 sm:gap-4 md:gap-6">
             <Link href="/">
               <motion.div 
-                className="flex items-center gap-1 xs:gap-2 hover-elevate active-elevate-2 rounded-md p-1 xs:p-2 -ml-1 xs:-ml-2 cursor-pointer" 
+                className="flex items-center rounded-md p-1 cursor-pointer" 
                 data-testid="link-home"
-                whileHover={animationConfig.enabled ? { scale: 1.05 } : {}}
-                whileTap={animationConfig.enabled ? { scale: 0.95 } : {}}
+                whileHover={animationConfig.enabled ? { scale: 1.03 } : {}}
+                whileTap={animationConfig.enabled ? { scale: 0.97 } : {}}
               >
                 <motion.img 
                   src={logoUrl} 
                   alt="BIN Logo" 
-                  className="h-8 xs:h-10 sm:h-12 md:h-14 lg:h-16 w-auto object-contain" 
-                  animate={animationConfig.enabled ? { rotate: [0, 2, -2, 0] } : {}}
-                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                  className="h-7 xs:h-8 sm:h-10 md:h-12 lg:h-14 w-auto object-contain" 
+                  animate={animationConfig.enabled ? { rotate: [0, 1, -1, 0] } : {}}
+                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                 />
               </motion.div>
             </Link>
 
-            {/* Responsive Quick Navigation */}
-            <nav className="hidden md:flex lg:flex items-center gap-0.5 sm:gap-1">
+            {/* Desktop-Only Quick Navigation */}
+            <nav className="hidden lg:flex items-center gap-1">
               <motion.div 
                 whileHover={animationConfig.enabled ? { scale: 1.05 } : {}} 
                 whileTap={animationConfig.enabled ? { scale: 0.95 } : {}}
               >
-                <Button variant="ghost" size={deviceInfo.type === 'tablet' ? 'sm' : 'default'} asChild>
+                <Button variant="ghost" size="sm" asChild>
                   <Link href="/bots">
-                    <Zap className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                    <span className="hidden lg:inline">Explore</span>
-                    <span className="lg:hidden text-xs sm:text-sm">Explore</span>
+                    <Zap className="w-4 h-4 mr-1" />
+                    <span className="text-sm">Explore</span>
                   </Link>
                 </Button>
               </motion.div>
@@ -116,11 +116,10 @@ export function Header() {
                 whileHover={animationConfig.enabled ? { scale: 1.05 } : {}} 
                 whileTap={animationConfig.enabled ? { scale: 0.95 } : {}}
               >
-                <Button variant="ghost" size={deviceInfo.type === 'tablet' ? 'sm' : 'default'} asChild>
+                <Button variant="ghost" size="sm" asChild>
                   <Link href="/trending">
-                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                    <span className="hidden lg:inline">Trending</span>
-                    <span className="lg:hidden text-xs sm:text-sm">Hot</span>
+                    <TrendingUp className="w-4 h-4 mr-1" />
+                    <span className="text-sm">Trending</span>
                   </Link>
                 </Button>
               </motion.div>
@@ -128,16 +127,16 @@ export function Header() {
                 whileHover={animationConfig.enabled ? { scale: 1.05 } : {}} 
                 whileTap={animationConfig.enabled ? { scale: 0.95 } : {}}
               >
-                <Button variant="ghost" size={deviceInfo.type === 'tablet' ? 'sm' : 'default'} asChild>
+                <Button variant="ghost" size="sm" asChild>
                   <Link href="/categories">
-                    <span className="text-xs sm:text-sm">Categories</span>
+                    <span className="text-sm">Categories</span>
                   </Link>
                 </Button>
               </motion.div>
             </nav>
 
-            {/* Responsive Enhanced Search */}
-            <div className="hidden sm:block w-full max-w-xs sm:max-w-sm lg:max-w-md relative">
+            {/* Desktop-Only Enhanced Search */}
+            <div className="hidden md:block w-full max-w-sm lg:max-w-md relative">
               <AdvancedSearch 
                 onSearch={(query, filters) => {
                   const params = new URLSearchParams();
@@ -147,7 +146,7 @@ export function Header() {
                   });
                   navigate(`/bots?${params.toString()}`);
                 }}
-                placeholder={deviceInfo.type === 'tablet' ? "Search..." : "Search bots..."}
+                placeholder="Search bots..."
                 className="w-full text-sm"
               />
               <motion.div
@@ -156,15 +155,15 @@ export function Header() {
                 animate={animationConfig.enabled ? { opacity: 1 } : {}}
                 transition={{ delay: 1 }}
               >
-                <Command className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                <span className="hidden sm:inline">K</span>
+                <Command className="w-3 h-3" />
+                <span>K</span>
               </motion.div>
             </div>
           </div>
 
-          <div className="flex items-center gap-1 xs:gap-2">
-            {/* Mobile Menu Button */}
-            <div className="sm:hidden">
+          <div className="flex items-center gap-1">
+            {/* Mobile Menu Button - Ultra Mobile First */}
+            <div className="md:hidden">
               <motion.div
                 whileHover={animationConfig.enabled ? { scale: 1.05 } : {}}
                 whileTap={animationConfig.enabled ? { scale: 0.95 } : {}}
@@ -173,12 +172,12 @@ export function Header() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowMobileMenu(!showMobileMenu)}
-                  className="h-8 w-8 xs:h-9 xs:w-9"
+                  className="h-9 w-9 rounded-lg"
                 >
                   {showMobileMenu ? (
-                    <X className="h-4 w-4 xs:h-5 xs:w-5" />
+                    <X className="h-5 w-5" />
                   ) : (
-                    <Menu className="h-4 w-4 xs:h-5 xs:w-5" />
+                    <Menu className="h-5 w-5" />
                   )}
                 </Button>
               </motion.div>
@@ -186,9 +185,9 @@ export function Header() {
 
             {user ? (
               <>
-                {/* Responsive Quick Actions */}
+                {/* Desktop-Only Quick Actions */}
                 <motion.div 
-                  className="hidden sm:flex items-center gap-0.5 sm:gap-1"
+                  className="hidden md:flex items-center gap-1"
                   initial={animationConfig.enabled ? { opacity: 0, x: 20 } : {}}
                   animate={animationConfig.enabled ? { opacity: 1, x: 0 } : {}}
                   transition={{ delay: 0.3 }}
@@ -197,12 +196,12 @@ export function Header() {
                     whileHover={animationConfig.enabled ? { scale: 1.1 } : {}} 
                     whileTap={animationConfig.enabled ? { scale: 0.9 } : {}}
                   >
-                    <Button variant="ghost" size="icon" asChild className="relative h-8 w-8 sm:h-9 sm:w-9">
+                    <Button variant="ghost" size="icon" asChild className="relative h-9 w-9">
                       <Link href="/collections">
-                        <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <Heart className="h-5 w-5" />
                         <Badge 
                           variant="secondary" 
-                          className="absolute -top-0.5 -right-0.5 h-3 w-3 sm:h-4 sm:w-4 p-0 text-xs flex items-center justify-center"
+                          className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
                         >
                           3
                         </Badge>
@@ -210,9 +209,7 @@ export function Header() {
                     </Button>
                   </motion.div>
                   
-                  <div className="hidden md:block">
-                    <NotificationBell />
-                  </div>
+                  <NotificationBell />
                 </motion.div>
 
                 {user.isDeveloper && (

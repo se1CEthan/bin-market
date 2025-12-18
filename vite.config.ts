@@ -27,4 +27,7 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
+  define: {
+    'import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY': JSON.stringify(process.env.STRIPE_PUBLISHABLE_KEY),
+  },
 });

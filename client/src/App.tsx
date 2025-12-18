@@ -12,6 +12,9 @@ import { BotCollections } from "@/components/BotCollections";
 import { BotComparison } from "@/components/BotComparison";
 import { ScrollToTop, ParticleBackground } from "@/components/ui/floating-elements";
 import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import VerifyEmail from "@/pages/VerifyEmail";
+import Checkout from "@/pages/Checkout";
 import Home from "@/pages/Home";
 import BotListing from "@/pages/BotListing";
 import BotDetail from "@/pages/BotDetail";
@@ -32,6 +35,9 @@ function Router() {
         <AnimatePresence mode="wait">
           <Switch>
             <Route path="/login" component={Login} />
+            <Route path="/register" component={Register} />
+            <Route path="/verify-email" component={VerifyEmail} />
+            <Route path="/checkout/:botId" component={Checkout} />
             <Route path="/" component={Home} />
             <Route path="/bots" component={BotListing} />
             <Route path="/bot/:id" component={BotDetail} />

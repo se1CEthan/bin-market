@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-export default function Login() {
+export default function Register() {
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -25,28 +28,44 @@ export default function Login() {
     setError('');
     setSuccess('');
 
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.error || 'Registration failed');
       }
 
-      setSuccess('Login successful! Redirecting...');
+      setSuccess('Registration successful! Please check your email to verify your account.');
       
-      // Redirect after successful login
+      // Redirect to login after 3 seconds
       setTimeout(() => {
-        setLocation('/');
-        window.location.reload(); // Refresh to update auth state
-      }, 1000);
+        setLocation('/login');
+      }, 3000);
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -62,7 +81,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -72,10 +91,10 @@ export default function Login() {
         <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Welcome Back
+              Create Account
             </CardTitle>
             <CardDescription>
-              Sign in to your BIN account to continue
+              Join BIN to start buying and selling automation bots
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -93,6 +112,25 @@ export default function Login() {
                   <AlertDescription>{success}</AlertDescription>
                 </Alert>
               )}
+
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium text-gray-700">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Enter your full name"
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
 
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium text-gray-700">
@@ -125,7 +163,7 @@ export default function Login() {
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="Enter your password"
+                    placeholder="Create a password (min. 8 characters)"
                     className="pl-10 pr-10"
                     required
                   />
@@ -139,13 +177,30 @@ export default function Login() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
-                >
-                  Forgot password?
-                </Link>
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Confirm your password"
+                    className="pl-10 pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <Button
@@ -156,10 +211,10 @@ export default function Login() {
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Signing in...</span>
+                    <span>Creating account...</span>
                   </div>
                 ) : (
-                  'Sign In'
+                  'Create Account'
                 )}
               </Button>
 
@@ -202,15 +257,26 @@ export default function Login() {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
+                Already have an account?{' '}
                 <Link
-                  to="/register"
+                  to="/login"
                   className="font-medium text-blue-600 hover:text-blue-500 hover:underline"
                 >
-                  Sign up
+                  Sign in
                 </Link>
               </p>
             </div>
+
+            <p className="mt-4 text-xs text-center text-gray-500">
+              By creating an account, you agree to our{' '}
+              <Link to="/terms" className="text-blue-600 hover:underline">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link to="/privacy" className="text-blue-600 hover:underline">
+                Privacy Policy
+              </Link>
+            </p>
           </CardContent>
         </Card>
       </motion.div>

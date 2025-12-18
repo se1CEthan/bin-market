@@ -6,6 +6,10 @@ import path from "path";
 import { storage } from "./storage";
 import { setupAuth, requireAuth, requireDeveloper, requireAdmin } from "./auth";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
+import { AuthService } from "./services/auth";
+import { StripeService } from "./services/stripe";
+import { PayPalService } from "./services/paypal";
+import { LicenseService } from "./services/license";
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -25,6 +29,283 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/paypal/setup", loadPaypalDefault);
   app.post("/api/paypal/order", createPaypalOrder);
   app.post("/api/paypal/order/:orderID/capture", capturePaypalOrder);
+
+  // Authentication routes
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, password, name } = req.body;
+      
+      if (!email || !password || !name) {
+        return res.status(400).json({ error: "Email, password, and name are required" });
+      }
+
+      if (password.length < 8) {
+        return res.status(400).json({ error: "Password must be at least 8 characters long" });
+      }
+
+      const result = await AuthService.registerUser(email, password, name);
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+      }
+
+      const user = await AuthService.loginUser(email, password);
+      
+      // Set session
+      req.session.userId = user.id;
+      req.session.user = user;
+
+      res.json({ user, message: "Login successful" });
+    } catch (error: any) {
+      res.status(401).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/verify-email", async (req, res) => {
+    try {
+      const { token } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ error: "Verification token is required" });
+      }
+
+      const result = await AuthService.verifyEmail(token);
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/resend-verification", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+
+      const result = await AuthService.resendVerificationEmail(email);
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+
+      const result = await AuthService.requestPasswordReset(email);
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+      
+      if (!token || !password) {
+        return res.status(400).json({ error: "Token and password are required" });
+      }
+
+      if (password.length < 8) {
+        return res.status(400).json({ error: "Password must be at least 8 characters long" });
+      }
+
+      const result = await AuthService.resetPassword(token, password);
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/change-password", requireAuth, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: "Current password and new password are required" });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({ error: "New password must be at least 8 characters long" });
+      }
+
+      const result = await AuthService.changePassword((req.user as any).id, currentPassword, newPassword);
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Failed to logout" });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ message: "Logout successful" });
+    });
+  });
+
+  // Stripe payment routes
+  app.post("/api/stripe/create-payment-intent", requireAuth, async (req, res) => {
+    try {
+      const { botId, amount } = req.body;
+      
+      if (!botId || !amount) {
+        return res.status(400).json({ error: "Bot ID and amount are required" });
+      }
+
+      const result = await StripeService.createPaymentIntent(
+        botId,
+        (req.user as any).id,
+        parseFloat(amount)
+      );
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('Stripe payment intent error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/stripe/webhook", async (req, res) => {
+    try {
+      const signature = req.headers['stripe-signature'] as string;
+      
+      if (!signature) {
+        return res.status(400).json({ error: "Missing Stripe signature" });
+      }
+
+      const result = await StripeService.handleWebhook(req.rawBody as Buffer, signature);
+      res.json(result);
+    } catch (error: any) {
+      console.error('Stripe webhook error:', error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/stripe/confirm-payment", requireAuth, async (req, res) => {
+    try {
+      const { paymentIntentId } = req.body;
+      
+      if (!paymentIntentId) {
+        return res.status(400).json({ error: "Payment intent ID is required" });
+      }
+
+      const result = await StripeService.handlePaymentSuccess(paymentIntentId);
+      res.json(result);
+    } catch (error: any) {
+      console.error('Stripe payment confirmation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Enhanced PayPal routes
+  app.post("/api/paypal/create-order", requireAuth, async (req, res) => {
+    try {
+      const { botId, amount } = req.body;
+      
+      if (!botId || !amount) {
+        return res.status(400).json({ error: "Bot ID and amount are required" });
+      }
+
+      const order = await PayPalService.createOrder(
+        botId,
+        (req.user as any).id,
+        parseFloat(amount)
+      );
+
+      res.json(order);
+    } catch (error: any) {
+      console.error('PayPal order creation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/paypal/capture-order", requireAuth, async (req, res) => {
+    try {
+      const { orderId } = req.body;
+      
+      if (!orderId) {
+        return res.status(400).json({ error: "Order ID is required" });
+      }
+
+      const result = await PayPalService.captureOrder(orderId);
+      res.json(result);
+    } catch (error: any) {
+      console.error('PayPal capture error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // License and download routes
+  app.get("/api/licenses", requireAuth, async (req, res) => {
+    try {
+      const licenses = await LicenseService.getUserLicenses((req.user as any).id);
+      res.json(licenses);
+    } catch (error: any) {
+      console.error('Get licenses error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/licenses/validate", async (req, res) => {
+    try {
+      const { licenseKey, botId } = req.body;
+      
+      if (!licenseKey) {
+        return res.status(400).json({ error: "License key is required" });
+      }
+
+      const result = await LicenseService.validateLicense(licenseKey, botId);
+      res.json(result);
+    } catch (error: any) {
+      console.error('License validation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/download/:token", requireAuth, async (req, res) => {
+    try {
+      const { token } = req.params;
+      
+      const downloadInfo = await LicenseService.getDownloadUrl(token, (req.user as any).id);
+      
+      // Redirect to actual file or serve file
+      if (downloadInfo.fileUrl) {
+        // If it's a local file path, serve it
+        if (downloadInfo.fileUrl.startsWith('/uploads/')) {
+          const filePath = path.join(process.cwd(), downloadInfo.fileUrl);
+          res.download(filePath, downloadInfo.fileName);
+        } else {
+          // If it's an external URL, redirect
+          res.redirect(downloadInfo.fileUrl);
+        }
+      } else {
+        res.status(404).json({ error: "File not found" });
+      }
+    } catch (error: any) {
+      console.error('Download error:', error);
+      res.status(400).json({ error: error.message });
+    }
+  });
 
   // Public routes
   app.get("/api/stats", async (req, res) => {
