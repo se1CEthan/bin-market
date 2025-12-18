@@ -10,6 +10,7 @@
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "seed:categories": "tsx scripts/seed-categories.ts",
+    "seed:test-data": "tsx scripts/seed-test-data.ts",
     "make-admin": "tsx scripts/make-admin.ts",
     "create-test-bot": "tsx scripts/create-test-bot.ts"
   },

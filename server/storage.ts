@@ -43,6 +43,9 @@ export interface IStorage {
   getBotById(id: string): Promise<Bot | undefined>;
   getBotsByDeveloper(developerId: string): Promise<Bot[]>;
   getTrendingBots(limit?: number): Promise<Bot[]>;
+  getMostPopularBots(limit?: number): Promise<Bot[]>;
+  getNewReleaseBots(limit?: number): Promise<Bot[]>;
+  getRecentActivity(limit?: number): Promise<any[]>;
   getPendingBots(): Promise<Bot[]>;
   createBot(bot: InsertBot): Promise<Bot>;
   updateBot(id: string, updates: Partial<Bot>): Promise<Bot | undefined>;
@@ -198,10 +201,73 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTrendingBots(limit: number = 8): Promise<Bot[]> {
+    // Simplified trending = highest downloads and views
     return await db.select().from(bots)
       .where(eq(bots.status, 'approved'))
-      .orderBy(desc(bots.downloadCount), desc(bots.viewCount))
+      .orderBy(desc(bots.downloadCount), desc(bots.viewCount), desc(bots.averageRating))
       .limit(limit);
+  }
+
+  async getMostPopularBots(limit: number = 8): Promise<Bot[]> {
+    // Most popular = highest download count + rating
+    return await db.select().from(bots)
+      .where(eq(bots.status, 'approved'))
+      .orderBy(
+        desc(bots.downloadCount),
+        desc(bots.averageRating),
+        desc(bots.reviewCount)
+      )
+      .limit(limit);
+  }
+
+  async getNewReleaseBots(limit: number = 8): Promise<Bot[]> {
+    // New releases = recently created and approved
+    return await db.select().from(bots)
+      .where(eq(bots.status, 'approved'))
+      .orderBy(desc(bots.createdAt))
+      .limit(limit);
+  }
+
+  async getRecentActivity(limit: number = 20): Promise<any[]> {
+    // Get recent transactions with bot and user details
+    const recentTransactions = await db.select({
+      id: transactions.id,
+      type: sql<string>`'purchase'`,
+      createdAt: transactions.createdAt,
+      botId: transactions.botId,
+      botTitle: bots.title,
+      buyerName: users.name,
+      amount: transactions.amount,
+    })
+    .from(transactions)
+    .leftJoin(bots, eq(bots.id, transactions.botId))
+    .leftJoin(users, eq(users.id, transactions.buyerId))
+    .where(eq(transactions.status, 'completed'))
+    .orderBy(desc(transactions.createdAt))
+    .limit(limit);
+
+    // Get recent bot uploads
+    const recentUploads = await db.select({
+      id: bots.id,
+      type: sql<string>`'upload'`,
+      createdAt: bots.createdAt,
+      botId: bots.id,
+      botTitle: bots.title,
+      buyerName: users.name,
+      amount: sql<string>`null`,
+    })
+    .from(bots)
+    .leftJoin(users, eq(users.id, bots.developerId))
+    .where(eq(bots.status, 'approved'))
+    .orderBy(desc(bots.createdAt))
+    .limit(Math.floor(limit / 2));
+
+    // Combine and sort by date
+    const allActivity = [...recentTransactions, ...recentUploads]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit);
+
+    return allActivity;
   }
 
   async getPendingBots(): Promise<Bot[]> {
@@ -428,21 +494,129 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlatformStats(): Promise<any> {
-    const botsCount = await db.select({ count: sql<number>`COUNT(*)` })
+    // Get current date for time-based queries
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const thisWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Total approved bots
+    const totalBotsResult = await db.select({ count: sql<number>`COUNT(*)` })
       .from(bots)
       .where(eq(bots.status, 'approved'));
-    const developersCount = await db.select({ count: sql<number>`COUNT(*)` })
+
+    // Active bots (with downloads or views in last 30 days)
+    const activeBotsResult = await db.select({ count: sql<number>`COUNT(DISTINCT ${bots.id})` })
+      .from(bots)
+      .leftJoin(transactions, eq(transactions.botId, bots.id))
+      .where(and(
+        eq(bots.status, 'approved'),
+        or(
+          gte(transactions.createdAt, thisMonth),
+          gte(bots.updatedAt, thisMonth)
+        )
+      ));
+
+    // New bots this week
+    const newBotsThisWeekResult = await db.select({ count: sql<number>`COUNT(*)` })
+      .from(bots)
+      .where(and(
+        eq(bots.status, 'approved'),
+        gte(bots.createdAt, thisWeek)
+      ));
+
+    // Featured bots
+    const featuredBotsResult = await db.select({ count: sql<number>`COUNT(*)` })
+      .from(bots)
+      .where(and(
+        eq(bots.status, 'approved'),
+        eq(bots.isFeatured, true)
+      ));
+
+    // Total downloads
+    const totalDownloadsResult = await db.select({
+      total: sql<number>`COALESCE(SUM(${bots.downloadCount}), 0)`,
+    }).from(bots);
+
+    // Downloads today
+    const downloadsToday = await db.select({ count: sql<number>`COUNT(*)` })
+      .from(transactions)
+      .where(and(
+        eq(transactions.status, 'completed'),
+        gte(transactions.completedAt, today)
+      ));
+
+    // Sales today
+    const salesToday = await db.select({ 
+      count: sql<number>`COUNT(*)`,
+      revenue: sql<number>`COALESCE(SUM(CAST(${transactions.amount} AS DECIMAL)), 0)`
+    })
+      .from(transactions)
+      .where(and(
+        eq(transactions.status, 'completed'),
+        gte(transactions.completedAt, today)
+      ));
+
+    // Total users
+    const totalUsersResult = await db.select({ count: sql<number>`COUNT(*)` })
+      .from(users);
+
+    // Active users (logged in this month)
+    const activeUsersResult = await db.select({ count: sql<number>`COUNT(*)` })
+      .from(users)
+      .where(gte(users.lastLoginAt, thisMonth));
+
+    // Total developers
+    const totalDevelopersResult = await db.select({ count: sql<number>`COUNT(*)` })
       .from(users)
       .where(eq(users.isDeveloper, true));
-    const downloadsResult = await db.select({
-      total: sql<number>`SUM(${bots.downloadCount})`,
-    })
-    .from(bots);
+
+    // Average rating across all bots
+    const averageRatingResult = await db.select({
+      avg: sql<number>`COALESCE(AVG(CAST(${bots.averageRating} AS DECIMAL)), 0)`
+    }).from(bots).where(eq(bots.status, 'approved'));
+
+    // Total reviews
+    const totalReviewsResult = await db.select({ count: sql<number>`COUNT(*)` })
+      .from(reviews);
+
+    // Recent activity count (last 24 hours)
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const recentActivityResult = await db.select({ count: sql<number>`COUNT(*)` })
+      .from(transactions)
+      .where(gte(transactions.createdAt, yesterday));
 
     return {
-      totalBots: botsCount[0]?.count || 0,
-      totalDevelopers: developersCount[0]?.count || 0,
-      totalDownloads: downloadsResult[0]?.total || 0,
+      // Bot statistics
+      totalBots: totalBotsResult[0]?.count || 0,
+      activeBots: activeBotsResult[0]?.count || 0,
+      newBotsThisWeek: newBotsThisWeekResult[0]?.count || 0,
+      featuredBots: featuredBotsResult[0]?.count || 0,
+      
+      // Download statistics
+      totalDownloads: totalDownloadsResult[0]?.total || 0,
+      downloadsToday: downloadsToday[0]?.count || 0,
+      
+      // Sales statistics
+      salesToday: salesToday[0]?.count || 0,
+      revenueToday: salesToday[0]?.revenue || 0,
+      
+      // User statistics
+      totalUsers: totalUsersResult[0]?.count || 0,
+      activeUsers: activeUsersResult[0]?.count || 0,
+      totalDevelopers: totalDevelopersResult[0]?.count || 0,
+      
+      // Quality metrics
+      averageRating: Number(Number(averageRatingResult[0]?.avg || 0).toFixed(1)),
+      totalReviews: totalReviewsResult[0]?.count || 0,
+      
+      // Activity metrics
+      recentActivity: recentActivityResult[0]?.count || 0,
+      
+      // Calculated metrics
+      conversionRate: totalUsersResult[0]?.count > 0 
+        ? Number(((salesToday[0]?.count || 0) / totalUsersResult[0].count * 100).toFixed(2))
+        : 0,
     };
   }
 }

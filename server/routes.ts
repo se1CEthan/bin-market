@@ -260,6 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await storage.getPlatformStats();
       res.json(stats);
     } catch (error) {
+      console.error('Stats API error:', error);
       res.status(500).json({ error: "Failed to fetch stats" });
     }
   });
@@ -275,7 +276,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/bots/trending", async (req, res) => {
     try {
-      const bots = await storage.getTrendingBots(8);
+      const limit = parseInt(req.query.limit as string) || 8;
+      const bots = await storage.getTrendingBots(limit);
       const botsWithDetails = await Promise.all(
         bots.map(async (bot) => {
           const developer = await storage.getUser(bot.developerId);
@@ -289,7 +291,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.json(botsWithDetails);
     } catch (error) {
+      console.error('Trending bots API error:', error);
       res.status(500).json({ error: "Failed to fetch trending bots" });
+    }
+  });
+
+  app.get("/api/bots/popular", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 8;
+      const bots = await storage.getMostPopularBots(limit);
+      const botsWithDetails = await Promise.all(
+        bots.map(async (bot) => {
+          const developer = await storage.getUser(bot.developerId);
+          const category = await storage.getCategoryById(bot.categoryId);
+          return {
+            ...bot,
+            developer: developer ? { name: developer.name, avatarUrl: developer.avatarUrl } : null,
+            category: category ? { name: category.name } : null,
+          };
+        })
+      );
+      res.json(botsWithDetails);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch popular bots" });
+    }
+  });
+
+  app.get("/api/bots/new-releases", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 8;
+      const bots = await storage.getNewReleaseBots(limit);
+      const botsWithDetails = await Promise.all(
+        bots.map(async (bot) => {
+          const developer = await storage.getUser(bot.developerId);
+          const category = await storage.getCategoryById(bot.categoryId);
+          return {
+            ...bot,
+            developer: developer ? { name: developer.name, avatarUrl: developer.avatarUrl } : null,
+            category: category ? { name: category.name } : null,
+          };
+        })
+      );
+      res.json(botsWithDetails);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch new releases" });
+    }
+  });
+
+  app.get("/api/activity/recent", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const activity = await storage.getRecentActivity(limit);
+      res.json(activity);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch recent activity" });
     }
   });
 
