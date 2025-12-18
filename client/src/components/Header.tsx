@@ -73,46 +73,9 @@ export function Header() {
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        {/* Live Activity Bar */}
-        <motion.div 
-          className="bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 px-4 py-1"
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="container mx-auto flex items-center justify-center gap-6 text-xs">
-            {liveStats && (
-              <>
-                <motion.div 
-                  className="flex items-center gap-1"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span>{liveStats.onlineUsers.toLocaleString()} users online</span>
-                </motion.div>
-                <motion.div 
-                  className="flex items-center gap-1"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-                >
-                  <TrendingUp className="w-3 h-3 text-blue-500" />
-                  <span>{liveStats.newBotsThisWeek} new bots this week</span>
-                </motion.div>
-                <motion.div 
-                  className="flex items-center gap-1"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: 1 }}
-                >
-                  <Sparkles className="w-3 h-3 text-yellow-500" />
-                  <span>{liveStats.salesToday} sales today</span>
-                </motion.div>
-              </>
-            )}
-          </div>
-        </motion.div>
 
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+
+        <div className="container mx-auto flex h-18 md:h-20 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-6 md:gap-8">
             <Link href="/">
               <motion.div 
@@ -124,9 +87,9 @@ export function Header() {
                 <motion.img 
                   src={logoUrl} 
                   alt="BIN Logo" 
-                  className="h-10 w-auto object-contain" 
-                  animate={{ rotate: [0, 5, -5, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="h-12 md:h-14 w-auto object-contain" 
+                  animate={{ rotate: [0, 2, -2, 0] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                 />
 
               </motion.div>

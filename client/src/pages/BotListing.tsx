@@ -105,38 +105,38 @@ export default function BotListing() {
         >
           <div className="text-center space-y-4">
             <motion.h1 
-              className="font-display text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+              className="font-display text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              {debouncedSearch ? `Search results for "${debouncedSearch}"` : 'Production-Ready Automation Bots'}
+              {debouncedSearch ? `Search results for "${debouncedSearch}"` : 'Professional Automation Solutions'}
             </motion.h1>
             <motion.p 
-              className="text-muted-foreground text-lg max-w-2xl mx-auto"
+              className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto px-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              Discover verified, production-ready automation bots from trusted developers. 
-              All bots include documentation, support, and instant delivery.
+              Enterprise-grade automation solutions from verified creators. 
+              All solutions include comprehensive documentation, professional support, and instant deployment.
             </motion.p>
           </div>
 
           {/* Enhanced Search Bar */}
           <motion.div 
-            className="max-w-2xl mx-auto"
+            className="max-w-2xl mx-auto px-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
               <Input
-                placeholder="Search bots, categories, or developers..."
+                placeholder="Search solutions, categories, or creators..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-4 py-3 text-lg bg-background/50 backdrop-blur border-primary/20 focus:border-primary/50"
+                className="pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-base sm:text-lg bg-background/50 backdrop-blur border-primary/20 focus:border-primary/50"
               />
               {searchQuery && (
                 <Button
@@ -153,22 +153,22 @@ export default function BotListing() {
 
           {/* Trust Indicators */}
           <motion.div 
-            className="flex items-center justify-center gap-8 text-sm text-muted-foreground"
+            className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-muted-foreground px-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
             <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-green-500" />
-              <span>All Bots Verified</span>
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+              <span>Enterprise Verified</span>
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-blue-500" />
-              <span>Instant Delivery</span>
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
+              <span>Instant Deployment</span>
             </div>
             <div className="flex items-center gap-2">
-              <Verified className="w-4 h-4 text-purple-500" />
-              <span>Trusted Developers</span>
+              <Verified className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500" />
+              <span>Professional Support</span>
             </div>
           </motion.div>
         </motion.div>
