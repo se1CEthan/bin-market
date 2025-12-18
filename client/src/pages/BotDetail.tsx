@@ -10,6 +10,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { BotSandbox } from '@/components/BotSandbox';
+import { SocialFeatures } from '@/components/SocialFeatures';
+import { BotComparison } from '@/components/BotComparison';
 import { 
   Star, 
   Download, 
@@ -19,7 +22,13 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
-  Terminal
+  Terminal,
+  GitCompare,
+  TestTube,
+  Bookmark,
+  Heart,
+  Share2,
+  Flag
 } from 'lucide-react';
 import type { Bot, Review } from '@shared/schema';
 import { queryClient, apiRequest } from '@/lib/queryClient';
@@ -245,6 +254,18 @@ export default function BotDetail() {
               <TabsList className="w-full justify-start">
                 <TabsTrigger value="description" data-testid="tab-description">Description</TabsTrigger>
                 <TabsTrigger value="reviews" data-testid="tab-reviews">Reviews ({bot.reviewCount})</TabsTrigger>
+                <TabsTrigger value="sandbox" data-testid="tab-sandbox">
+                  <TestTube className="h-4 w-4 mr-2" />
+                  Test Bot
+                </TabsTrigger>
+                <TabsTrigger value="social" data-testid="tab-social">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Community
+                </TabsTrigger>
+                <TabsTrigger value="compare" data-testid="tab-compare">
+                  <GitCompare className="h-4 w-4 mr-2" />
+                  Compare
+                </TabsTrigger>
                 <TabsTrigger value="support" data-testid="tab-support">Support</TabsTrigger>
               </TabsList>
 
@@ -331,6 +352,25 @@ export default function BotDetail() {
                     <p className="text-muted-foreground">No reviews yet. Be the first to review!</p>
                   </Card>
                 )}
+              </TabsContent>
+
+              <TabsContent value="sandbox">
+                <BotSandbox 
+                  botId={bot.id} 
+                  botTitle={bot.title}
+                  botFile={bot.fileUrl}
+                />
+              </TabsContent>
+
+              <TabsContent value="social">
+                <SocialFeatures 
+                  botId={bot.id} 
+                  developerId={bot.developerId}
+                />
+              </TabsContent>
+
+              <TabsContent value="compare">
+                <BotComparison initialBots={[bot]} />
               </TabsContent>
 
               <TabsContent value="support">

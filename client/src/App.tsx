@@ -7,6 +7,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ChatWidget } from "@/components/ChatWidget";
+import { BotCollections } from "@/components/BotCollections";
+import { BotComparison } from "@/components/BotComparison";
 import Login from "@/pages/Login";
 import Home from "@/pages/Home";
 import BotListing from "@/pages/BotListing";
@@ -35,6 +37,8 @@ function Router() {
           <Route path="/admin/dashboard" component={AdminDashboard} />
           <Route path="/account" component={Account} />
           <Route path="/account/purchases" component={Account} />
+          <Route path="/collections" component={BotCollections} />
+          <Route path="/compare" component={BotComparison} />
           <Route path="/payment/success/:botId" component={PaymentSuccess} />
           <Route component={NotFound} />
         </Switch>

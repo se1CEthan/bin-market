@@ -31,6 +31,16 @@ export default function Home() {
     queryKey: ['/api/bots/trending'],
   });
 
+  const { data: personalizedFeed } = useQuery({
+    queryKey: ['/api/recommendations/feed'],
+    enabled: !!user,
+  });
+
+  const { data: aiRecommendations } = useQuery({
+    queryKey: ['/api/recommendations/user'],
+    enabled: !!user,
+  });
+
   const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
   });
@@ -165,6 +175,40 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Personalized Recommendations */}
+      {user && personalizedFeed && personalizedFeed.length > 0 && (
+        <section className="py-16 md:py-24 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="font-display text-3xl md:text-4xl font-bold mb-2 flex items-center gap-2">
+                  <Sparkles className="h-8 w-8 text-purple-500" />
+                  Recommended for You
+                </h2>
+                <p className="text-muted-foreground">AI-powered recommendations based on your interests</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {personalizedFeed.slice(0, 8).map((recommendation: any) => (
+                <div key={recommendation.bot.id} className="relative">
+                  <BotCard bot={recommendation.bot} />
+                  <div className="absolute top-2 right-2">
+                    <Badge className="bg-purple-500 text-white">
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      {Math.round(recommendation.confidence * 100)}% match
+                    </Badge>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground text-center">
+                    {recommendation.reason}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Trending Bots */}
       <section className="py-16 md:py-24">

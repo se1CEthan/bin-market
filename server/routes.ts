@@ -284,6 +284,295 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Recommendations routes
+  app.get("/api/recommendations/user", requireAuth, async (req, res) => {
+    try {
+      const { aiRecommendationEngine } = await import('./ai-recommendations');
+      const recommendations = await aiRecommendationEngine.getUserRecommendations((req.user as any).id);
+      res.json(recommendations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch recommendations" });
+    }
+  });
+
+  app.get("/api/recommendations/similar/:botId", async (req, res) => {
+    try {
+      const { aiRecommendationEngine } = await import('./ai-recommendations');
+      const recommendations = await aiRecommendationEngine.getSimilarBots(req.params.botId);
+      res.json(recommendations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch similar bots" });
+    }
+  });
+
+  app.get("/api/recommendations/trending", async (req, res) => {
+    try {
+      const { aiRecommendationEngine } = await import('./ai-recommendations');
+      const recommendations = await aiRecommendationEngine.getTrendingRecommendations();
+      res.json(recommendations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch trending recommendations" });
+    }
+  });
+
+  app.get("/api/recommendations/feed", requireAuth, async (req, res) => {
+    try {
+      const { aiRecommendationEngine } = await import('./ai-recommendations');
+      const feed = await aiRecommendationEngine.getPersonalizedFeed((req.user as any).id);
+      res.json(feed);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch personalized feed" });
+    }
+  });
+
+  // Social features routes
+  app.post("/api/bots/:id/like", requireAuth, async (req, res) => {
+    try {
+      // Mock implementation - in production, store in database
+      res.json({ success: true, liked: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to like bot" });
+    }
+  });
+
+  app.post("/api/bots/:id/bookmark", requireAuth, async (req, res) => {
+    try {
+      // Mock implementation - in production, store in database
+      res.json({ success: true, bookmarked: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to bookmark bot" });
+    }
+  });
+
+  app.get("/api/bots/:id/social-stats", async (req, res) => {
+    try {
+      // Mock social stats
+      res.json({
+        likes: Math.floor(Math.random() * 100) + 10,
+        bookmarks: Math.floor(Math.random() * 50) + 5,
+        shares: Math.floor(Math.random() * 30) + 2,
+        isLiked: Math.random() > 0.5,
+        isBookmarked: Math.random() > 0.7,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch social stats" });
+    }
+  });
+
+  app.get("/api/bots/:id/comments", async (req, res) => {
+    try {
+      // Mock comments data
+      const comments = [
+        {
+          id: '1',
+          userId: 'user1',
+          user: {
+            name: 'John Doe',
+            avatarUrl: null,
+            isDeveloper: false,
+            isVerified: false,
+          },
+          content: 'Great bot! Works perfectly for my automation needs.',
+          likes: 5,
+          dislikes: 0,
+          replies: [],
+          createdAt: new Date().toISOString(),
+          isEdited: false,
+        },
+        {
+          id: '2',
+          userId: 'user2',
+          user: {
+            name: 'Jane Smith',
+            avatarUrl: null,
+            isDeveloper: true,
+            isVerified: true,
+          },
+          content: 'Excellent work! The documentation is very clear.',
+          likes: 8,
+          dislikes: 1,
+          replies: [],
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+          isEdited: false,
+        },
+      ];
+      res.json(comments);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch comments" });
+    }
+  });
+
+  app.post("/api/bots/:id/comments", requireAuth, async (req, res) => {
+    try {
+      const { content, parentId } = req.body;
+      // Mock comment creation
+      const newComment = {
+        id: Date.now().toString(),
+        userId: (req.user as any).id,
+        user: {
+          name: (req.user as any).name,
+          avatarUrl: (req.user as any).avatarUrl,
+          isDeveloper: (req.user as any).isDeveloper,
+          isVerified: false,
+        },
+        content,
+        likes: 0,
+        dislikes: 0,
+        replies: [],
+        createdAt: new Date().toISOString(),
+        isEdited: false,
+      };
+      res.json(newComment);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to add comment" });
+    }
+  });
+
+  app.get("/api/developers/:id/profile", async (req, res) => {
+    try {
+      // Mock developer profile
+      const profile = {
+        id: req.params.id,
+        name: 'Bot Developer',
+        avatarUrl: null,
+        bio: 'Experienced automation developer with 5+ years in the industry.',
+        followers: Math.floor(Math.random() * 1000) + 100,
+        following: Math.floor(Math.random() * 200) + 50,
+        totalBots: Math.floor(Math.random() * 20) + 5,
+        totalSales: Math.floor(Math.random() * 500) + 100,
+        averageRating: (Math.random() * 2 + 3).toFixed(1),
+        badges: ['verified', 'top-seller'],
+        isFollowing: Math.random() > 0.5,
+        isVerified: true,
+        joinedAt: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch developer profile" });
+    }
+  });
+
+  app.post("/api/developers/:id/follow", requireAuth, async (req, res) => {
+    try {
+      // Mock follow action
+      res.json({ success: true, following: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to follow developer" });
+    }
+  });
+
+  // Collections routes
+  app.get("/api/collections", requireAuth, async (req, res) => {
+    try {
+      // Mock collections data
+      const collections = [
+        {
+          id: '1',
+          name: 'My Favorite Automation Bots',
+          description: 'A curated collection of my most useful bots',
+          isPublic: false,
+          botCount: 5,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          bots: [],
+          tags: ['automation', 'productivity'],
+          likes: 0,
+          isLiked: false,
+        },
+      ];
+      res.json(collections);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch collections" });
+    }
+  });
+
+  app.post("/api/collections", requireAuth, async (req, res) => {
+    try {
+      const { name, description, isPublic } = req.body;
+      const newCollection = {
+        id: Date.now().toString(),
+        name,
+        description,
+        isPublic,
+        botCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        bots: [],
+        tags: [],
+        likes: 0,
+        isLiked: false,
+      };
+      res.json(newCollection);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create collection" });
+    }
+  });
+
+  app.get("/api/collections/public", async (req, res) => {
+    try {
+      // Mock public collections
+      const collections = [
+        {
+          id: '1',
+          name: 'Best WhatsApp Bots 2024',
+          description: 'Top-rated WhatsApp automation bots',
+          isPublic: true,
+          botCount: 8,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          bots: [],
+          tags: ['whatsapp', 'messaging'],
+          likes: 45,
+          isLiked: false,
+        },
+      ];
+      res.json(collections);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch public collections" });
+    }
+  });
+
+  app.get("/api/wishlist", requireAuth, async (req, res) => {
+    try {
+      // Mock wishlist data
+      const wishlist = [
+        {
+          id: '1',
+          botId: 'bot1',
+          bot: {
+            id: 'bot1',
+            title: 'Advanced Instagram Bot',
+            description: 'Automate your Instagram engagement',
+            price: '49.99',
+            thumbnailUrl: null,
+          },
+          addedAt: new Date().toISOString(),
+          priority: 'high',
+          notes: 'Need this for my marketing campaign',
+        },
+      ];
+      res.json(wishlist);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch wishlist" });
+    }
+  });
+
+  app.post("/api/wishlist", requireAuth, async (req, res) => {
+    try {
+      const { botId, priority, notes } = req.body;
+      const newItem = {
+        id: Date.now().toString(),
+        botId,
+        addedAt: new Date().toISOString(),
+        priority,
+        notes,
+      };
+      res.json(newItem);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to add to wishlist" });
+    }
+  });
+
   // Bot management routes
   app.patch("/api/developer/bots/:id", requireDeveloper, async (req, res) => {
     try {

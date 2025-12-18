@@ -9,7 +9,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Search, Upload, User, LogOut, Settings, ShoppingBag, LayoutDashboard } from 'lucide-react';
+import { AdvancedSearch } from '@/components/AdvancedSearch';
+import { NotificationBell } from '@/components/NotificationCenter';
+import { Search, Upload, User, LogOut, Settings, ShoppingBag, LayoutDashboard, Heart, FolderOpen, GitCompare, Bell } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import logoUrl from '@assets/bin-high-resolution-logo-transparent_1763235895212.png';
@@ -36,24 +38,33 @@ export function Header() {
             </div>
           </Link>
 
-          <form onSubmit={handleSearch} className="hidden md:flex items-center gap-2 w-full max-w-sm">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search bots..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-card"
-                data-testid="input-search"
-              />
-            </div>
-          </form>
+          <div className="hidden md:block w-full max-w-sm">
+            <AdvancedSearch 
+              onSearch={(query, filters) => {
+                const params = new URLSearchParams();
+                if (query) params.append('search', query);
+                filters.forEach(filter => {
+                  params.append(filter.type, filter.value);
+                });
+                navigate(`/bots?${params.toString()}`);
+              }}
+              placeholder="Search bots..."
+              className="w-full"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
           {user ? (
             <>
+              <Button variant="ghost" size="icon" asChild className="hidden sm:flex">
+                <Link href="/collections">
+                  <Heart className="h-5 w-5" />
+                </Link>
+              </Button>
+              
+              <NotificationBell />
+
               {user.isDeveloper && (
                 <Button
                   variant="outline"
@@ -104,6 +115,18 @@ export function Header() {
                     <Link href="/account/purchases">
                       <ShoppingBag className="h-4 w-4 mr-2" />
                       My Purchases
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/collections">
+                      <FolderOpen className="h-4 w-4 mr-2" />
+                      Collections & Wishlist
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/compare">
+                      <GitCompare className="h-4 w-4 mr-2" />
+                      Compare Bots
                     </Link>
                   </DropdownMenuItem>
                   {user.isDeveloper && (
