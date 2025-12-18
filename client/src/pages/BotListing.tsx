@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,7 +27,7 @@ import {
   fadeInUp,
   slideInFromRight 
 } from '@/lib/animations';
-import { Filter, SlidersHorizontal, X, Search, Star, Download, Eye, Calendar, Grid3X3, List, Sparkles, TrendingUp } from 'lucide-react';
+import { Filter, SlidersHorizontal, X, Search, Star, Download, Calendar, Grid3X3, List, Sparkles, TrendingUp, Verified, Shield, Clock } from 'lucide-react';
 import type { Bot, Category } from '@shared/schema';
 
 export default function BotListing() {
@@ -42,9 +42,8 @@ export default function BotListing() {
   const [sortBy, setSortBy] = useState('trending');
   const [showFilters, setShowFilters] = useState(false);
   const [minRating, setMinRating] = useState(0);
-  const [supportedOS, setSupportedOS] = useState<string[]>([]);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
@@ -83,6 +82,9 @@ export default function BotListing() {
   const clearFilters = () => {
     setSelectedCategories([]);
     setPriceRange([0, 1000]);
+    setMinRating(0);
+    setVerifiedOnly(false);
+    setSearchQuery('');
   };
 
   return (
@@ -94,28 +96,81 @@ export default function BotListing() {
       exit="exit"
     >
       <div className="container mx-auto px-4 md:px-6">
+        {/* Enhanced Header with Search */}
         <motion.div 
-          className="mb-8"
+          className="mb-8 space-y-6"
           variants={fadeInUp}
           initial="initial"
           animate="animate"
         >
-          <motion.h1 
-            className="font-display text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+          <div className="text-center space-y-4">
+            <motion.h1 
+              className="font-display text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              {debouncedSearch ? `Search results for "${debouncedSearch}"` : 'Production-Ready Automation Bots'}
+            </motion.h1>
+            <motion.p 
+              className="text-muted-foreground text-lg max-w-2xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              Discover verified, production-ready automation bots from trusted developers. 
+              All bots include documentation, support, and instant delivery.
+            </motion.p>
+          </div>
+
+          {/* Enhanced Search Bar */}
+          <motion.div 
+            className="max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.4 }}
           >
-            {debouncedSearch ? `Search results for "${debouncedSearch}"` : 'Browse Bots'}
-          </motion.h1>
-          <motion.p 
-            className="text-muted-foreground text-lg"
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                placeholder="Search bots, categories, or developers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-12 pr-4 py-3 text-lg bg-background/50 backdrop-blur border-primary/20 focus:border-primary/50"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Trust Indicators */}
+          <motion.div 
+            className="flex items-center justify-center gap-8 text-sm text-muted-foreground"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.5 }}
           >
-            Discover automation bots to streamline your workflow
-          </motion.p>
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-green-500" />
+              <span>All Bots Verified</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-blue-500" />
+              <span>Instant Delivery</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Verified className="w-4 h-4 text-purple-500" />
+              <span>Trusted Developers</span>
+            </div>
+          </motion.div>
         </motion.div>
 
         <div className="flex gap-8">
@@ -126,7 +181,7 @@ export default function BotListing() {
             initial="initial"
             animate="animate"
           >
-            <AdvancedCard className="p-6 sticky top-24 space-y-6" glow hover3d>
+            <Card className="p-6 sticky top-24 space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold flex items-center gap-2">
                   <Filter className="h-4 w-4" />
@@ -184,7 +239,39 @@ export default function BotListing() {
                   </div>
                 </div>
               </div>
-            </AdvancedCard>
+
+              {/* Rating Filter */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Minimum Rating</Label>
+                <div className="space-y-2">
+                  <Slider
+                    min={0}
+                    max={5}
+                    step={0.5}
+                    value={[minRating]}
+                    onValueChange={(value) => setMinRating(value[0])}
+                    className="w-full"
+                  />
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Star className="w-4 h-4 fill-current text-yellow-500" />
+                    <span className="font-mono">{minRating.toFixed(1)}+</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Verified Only */}
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="verified-only"
+                  checked={verifiedOnly}
+                  onCheckedChange={(checked) => setVerifiedOnly(checked as boolean)}
+                />
+                <Label htmlFor="verified-only" className="text-sm cursor-pointer flex items-center gap-2">
+                  <Verified className="w-4 h-4 text-blue-500" />
+                  Verified developers only
+                </Label>
+              </div>
+            </Card>
           </motion.aside>
 
           {/* Mobile Filter Toggle */}
@@ -255,6 +342,38 @@ export default function BotListing() {
                         <span className="font-mono">${priceRange[1]}</span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Rating Filter */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold">Minimum Rating</Label>
+                    <div className="space-y-2">
+                      <Slider
+                        min={0}
+                        max={5}
+                        step={0.5}
+                        value={[minRating]}
+                        onValueChange={(value) => setMinRating(value[0])}
+                        className="w-full"
+                      />
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Star className="w-4 h-4 fill-current text-yellow-500" />
+                        <span className="font-mono">{minRating.toFixed(1)}+</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Verified Only */}
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="mobile-verified-only"
+                      checked={verifiedOnly}
+                      onCheckedChange={(checked) => setVerifiedOnly(checked as boolean)}
+                    />
+                    <Label htmlFor="mobile-verified-only" className="text-sm cursor-pointer flex items-center gap-2">
+                      <Verified className="w-4 h-4 text-blue-500" />
+                      Verified developers only
+                    </Label>
                   </div>
                 </div>
 
@@ -394,7 +513,7 @@ export default function BotListing() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                 >
-                  <AdvancedCard className="p-12 text-center" glow>
+                  <Card className="p-12 text-center">
                     <motion.div
                       animate={{ 
                         rotate: [0, 10, -10, 0],
@@ -412,16 +531,14 @@ export default function BotListing() {
                     <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                       Try adjusting your filters or search query to discover amazing automation bots
                     </p>
-                    <InteractiveButton 
+                    <Button 
                       variant="outline" 
                       onClick={clearFilters}
-                      magnetic
-                      glow
                     >
                       <Sparkles className="h-4 w-4 mr-2" />
                       Clear Filters
-                    </InteractiveButton>
-                  </AdvancedCard>
+                    </Button>
+                  </Card>
                 </motion.div>
               )}
             </AnimatePresence>
