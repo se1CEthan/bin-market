@@ -6,7 +6,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BotCard } from '@/components/BotCard';
+import { TrendingBots } from '@/components/TrendingBots';
+import { LiveActivityFeed } from '@/components/LiveActivityFeed';
+import { AdvancedMarketplace } from '@/components/AdvancedMarketplace';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLiveStats } from '@/lib/live-data';
 import { 
   pageTransition, 
   staggerContainer, 
@@ -40,6 +44,7 @@ import type { Bot, Category } from '@shared/schema';
 
 export default function Home() {
   const { user } = useAuth();
+  const { stats } = useLiveStats();
 
   const { data: trendingBots, isLoading: botsLoading } = useQuery<(Bot & { developer: { name: string; avatarUrl: string | null }; category: { name: string } })[]>({
     queryKey: ['/api/bots/trending'],
@@ -59,9 +64,7 @@ export default function Home() {
     queryKey: ['/api/categories'],
   });
 
-  const { data: stats } = useQuery<{ totalBots: number; totalDevelopers: number; totalDownloads: number }>({
-    queryKey: ['/api/stats'],
-  });
+
 
   const categoryIcons = {
     'WhatsApp': MessageSquare,
@@ -450,6 +453,13 @@ export default function Home() {
               })}
             </div>
           ) : null}
+        </div>
+      </section>
+
+      {/* Advanced Marketplace */}
+      <section className="py-16 md:py-24 bg-gradient-to-br from-muted/30 to-background">
+        <div className="container mx-auto px-4 md:px-6">
+          <AdvancedMarketplace />
         </div>
       </section>
 

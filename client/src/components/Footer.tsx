@@ -29,25 +29,14 @@ import {
   Coffee
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLiveStats } from '@/lib/live-data';
 import logoUrl from '@assets/bin-high-resolution-logo-transparent_1763235895212.png';
-
-interface FooterStats {
-  totalBots: number;
-  totalUsers: number;
-  totalDownloads: number;
-  satisfaction: number;
-}
 
 export function Footer() {
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [stats, setStats] = useState<FooterStats>({
-    totalBots: 1247,
-    totalUsers: 15632,
-    totalDownloads: 89456,
-    satisfaction: 98.5,
-  });
+  const { stats } = useLiveStats();
 
   // Show scroll to top button
   useEffect(() => {
@@ -59,19 +48,7 @@ export function Footer() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Animate stats
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStats(prev => ({
-        totalBots: prev.totalBots + Math.floor(Math.random() * 3),
-        totalUsers: prev.totalUsers + Math.floor(Math.random() * 5),
-        totalDownloads: prev.totalDownloads + Math.floor(Math.random() * 10),
-        satisfaction: Math.min(99.9, prev.satisfaction + Math.random() * 0.1),
-      }));
-    }, 10000);
-    
-    return () => clearInterval(interval);
-  }, []);
+
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,79 +118,81 @@ export function Footer() {
             viewport={{ once: true }}
           >
             <div className="container mx-auto px-4 md:px-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                <motion.div 
-                  className="text-center"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <div className="flex items-center justify-center mb-2">
-                    <Bot className="w-6 h-6 text-primary mr-2" />
-                    <motion.div 
-                      className="text-3xl font-bold text-primary"
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      {stats.totalBots.toLocaleString()}
-                    </motion.div>
-                  </div>
-                  <div className="text-sm text-muted-foreground">Total Bots</div>
-                </motion.div>
+              {stats && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                  <motion.div 
+                    className="text-center"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <div className="flex items-center justify-center mb-2">
+                      <Bot className="w-6 h-6 text-primary mr-2" />
+                      <motion.div 
+                        className="text-3xl font-bold text-primary"
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        {stats.totalBots.toLocaleString()}
+                      </motion.div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Total Bots</div>
+                  </motion.div>
 
-                <motion.div 
-                  className="text-center"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <div className="flex items-center justify-center mb-2">
-                    <Users className="w-6 h-6 text-green-500 mr-2" />
-                    <motion.div 
-                      className="text-3xl font-bold text-green-500"
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-                    >
-                      {stats.totalUsers.toLocaleString()}
-                    </motion.div>
-                  </div>
-                  <div className="text-sm text-muted-foreground">Active Users</div>
-                </motion.div>
+                  <motion.div 
+                    className="text-center"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <div className="flex items-center justify-center mb-2">
+                      <Users className="w-6 h-6 text-green-500 mr-2" />
+                      <motion.div 
+                        className="text-3xl font-bold text-green-500"
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                      >
+                        {stats.totalUsers.toLocaleString()}
+                      </motion.div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Active Users</div>
+                  </motion.div>
 
-                <motion.div 
-                  className="text-center"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <div className="flex items-center justify-center mb-2">
-                    <TrendingUp className="w-6 h-6 text-blue-500 mr-2" />
-                    <motion.div 
-                      className="text-3xl font-bold text-blue-500"
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 1 }}
-                    >
-                      {stats.totalDownloads.toLocaleString()}
-                    </motion.div>
-                  </div>
-                  <div className="text-sm text-muted-foreground">Downloads</div>
-                </motion.div>
+                  <motion.div 
+                    className="text-center"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <div className="flex items-center justify-center mb-2">
+                      <TrendingUp className="w-6 h-6 text-blue-500 mr-2" />
+                      <motion.div 
+                        className="text-3xl font-bold text-blue-500"
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                      >
+                        {stats.totalDownloads.toLocaleString()}
+                      </motion.div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Downloads</div>
+                  </motion.div>
 
-                <motion.div 
-                  className="text-center"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <div className="flex items-center justify-center mb-2">
-                    <Star className="w-6 h-6 text-yellow-500 mr-2" />
-                    <motion.div 
-                      className="text-3xl font-bold text-yellow-500"
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 1.5 }}
-                    >
-                      {stats.satisfaction.toFixed(1)}%
-                    </motion.div>
-                  </div>
-                  <div className="text-sm text-muted-foreground">Satisfaction</div>
-                </motion.div>
-              </div>
+                  <motion.div 
+                    className="text-center"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <div className="flex items-center justify-center mb-2">
+                      <Star className="w-6 h-6 text-yellow-500 mr-2" />
+                      <motion.div 
+                        className="text-3xl font-bold text-yellow-500"
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, delay: 1.5 }}
+                      >
+                        {stats.averageRating.toFixed(1)}
+                      </motion.div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Average Rating</div>
+                  </motion.div>
+                </div>
+              )}
             </div>
           </motion.div>
 

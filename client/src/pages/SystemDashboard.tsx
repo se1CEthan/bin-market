@@ -40,6 +40,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAnalytics } from '@/lib/analytics';
 import { AdvancedCache } from '@/lib/performance';
+import { useLiveStats, useLiveActivity, useMarketMetrics } from '@/lib/live-data';
 
 interface SystemMetrics {
   performance: {
@@ -75,15 +76,17 @@ interface SystemMetrics {
 }
 
 export default function SystemDashboard() {
-  const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
   const [selectedTimeRange, setSelectedTimeRange] = useState('24h');
   const [realTimeData, setRealTimeData] = useState<any[]>([]);
   const { track } = useAnalytics();
+  const { stats: liveStats, loading: statsLoading } = useLiveStats();
+  const { activities, loading: activitiesLoading } = useLiveActivity();
+  const { metrics: marketMetrics, loading: metricsLoading } = useMarketMetrics();
+  
+  const loading = statsLoading || activitiesLoading || metricsLoading;
 
   useEffect(() => {
     track('system_dashboard_viewed');
-    loadMetrics();
     
     // Simulate real-time updates
     const interval = setInterval(() => {
@@ -92,48 +95,6 @@ export default function SystemDashboard() {
 
     return () => clearInterval(interval);
   }, [track]);
-
-  const loadMetrics = async () => {
-    setLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setMetrics({
-      performance: {
-        responseTime: 145,
-        throughput: 1250,
-        errorRate: 0.02,
-        uptime: 99.97,
-      },
-      users: {
-        online: 1247,
-        total: 15632,
-        newToday: 89,
-        activeThisWeek: 8934,
-      },
-      bots: {
-        total: 2847,
-        published: 2756,
-        pending: 91,
-        downloads: 156789,
-      },
-      revenue: {
-        today: 12450,
-        thisMonth: 345600,
-        totalRevenue: 2456789,
-        averageOrderValue: 45.67,
-      },
-      system: {
-        cpuUsage: 34,
-        memoryUsage: 67,
-        diskUsage: 45,
-        networkLatency: 23,
-      },
-    });
-    
-    setLoading(false);
-  };
 
   const updateRealTimeData = () => {
     const newDataPoint = {
@@ -150,7 +111,7 @@ export default function SystemDashboard() {
     return <LoadingScreen variant="neural" message="Loading System Dashboard..." />;
   }
 
-  if (!metrics) {
+  if (!liveStats || !marketMetrics) {
     return <div>Error loading metrics</div>;
   }
 
@@ -322,33 +283,33 @@ export default function SystemDashboard() {
         >
           <MetricCard
             title="Online Users"
-            value={metrics.users.online}
+            value={liveStats.onlineUsers}
             change={12.5}
             icon={Users}
             color="blue"
           />
           <MetricCard
             title="Total Bots"
-            value={metrics.bots.total}
+            value={liveStats.totalBots}
             change={8.3}
             icon={Bot}
             color="purple"
           />
           <MetricCard
             title="Revenue Today"
-            value={metrics.revenue.today}
+            value={liveStats.revenueToday}
             change={15.7}
             icon={DollarSign}
             color="green"
             format="currency"
           />
           <MetricCard
-            title="System Uptime"
-            value={metrics.performance.uptime}
+            title="Average Rating"
+            value={liveStats.averageRating}
             change={0.1}
-            icon={Shield}
-            color="emerald"
-            format="percentage"
+            icon={Star}
+            color="yellow"
+            format="number"
           />
         </motion.div>
 

@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useLiveStats } from '@/lib/live-data';
 import logoUrl from '@assets/bin-high-resolution-logo-transparent_1763235895212.png';
 
 export function Header() {
@@ -25,7 +26,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
-  const [liveStats, setLiveStats] = useState({ users: 0, bots: 0, sales: 0 });
+  const { stats: liveStats } = useLiveStats();
 
   // Advanced scroll detection
   useEffect(() => {
@@ -50,18 +51,7 @@ export function Header() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Simulate live stats updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLiveStats(prev => ({
-        users: prev.users + Math.floor(Math.random() * 3),
-        bots: prev.bots + Math.floor(Math.random() * 2),
-        sales: prev.sales + Math.floor(Math.random() * 5),
-      }));
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,30 +81,34 @@ export function Header() {
           transition={{ delay: 0.5 }}
         >
           <div className="container mx-auto flex items-center justify-center gap-6 text-xs">
-            <motion.div 
-              className="flex items-center gap-1"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span>{liveStats.users + 1247} users online</span>
-            </motion.div>
-            <motion.div 
-              className="flex items-center gap-1"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-            >
-              <TrendingUp className="w-3 h-3 text-blue-500" />
-              <span>{liveStats.bots + 89} new bots this week</span>
-            </motion.div>
-            <motion.div 
-              className="flex items-center gap-1"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity, delay: 1 }}
-            >
-              <Sparkles className="w-3 h-3 text-yellow-500" />
-              <span>{liveStats.sales + 156} sales today</span>
-            </motion.div>
+            {liveStats && (
+              <>
+                <motion.div 
+                  className="flex items-center gap-1"
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span>{liveStats.onlineUsers.toLocaleString()} users online</span>
+                </motion.div>
+                <motion.div 
+                  className="flex items-center gap-1"
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                >
+                  <TrendingUp className="w-3 h-3 text-blue-500" />
+                  <span>{liveStats.newBotsThisWeek} new bots this week</span>
+                </motion.div>
+                <motion.div 
+                  className="flex items-center gap-1"
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                >
+                  <Sparkles className="w-3 h-3 text-yellow-500" />
+                  <span>{liveStats.salesToday} sales today</span>
+                </motion.div>
+              </>
+            )}
           </div>
         </motion.div>
 
@@ -134,19 +128,7 @@ export function Header() {
                   animate={{ rotate: [0, 5, -5, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 />
-                <motion.div
-                  className="hidden sm:block"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <div className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                    BIN Market
-                  </div>
-                  <div className="text-xs text-muted-foreground -mt-1">
-                    Bot Intelligence Network
-                  </div>
-                </motion.div>
+
               </motion.div>
             </Link>
 
