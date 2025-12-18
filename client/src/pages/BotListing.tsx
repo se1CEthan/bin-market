@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -17,7 +17,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BotCard } from '@/components/BotCard';
-import { Filter, SlidersHorizontal, X, Search, Star, Download, Eye, Calendar } from 'lucide-react';
+import { BotGridSkeleton } from '@/components/ui/advanced-skeleton';
+import { AdvancedCard } from '@/components/ui/advanced-card';
+import { InteractiveButton } from '@/components/ui/interactive-button';
+import { 
+  pageTransition, 
+  staggerContainer, 
+  staggerItem, 
+  fadeInUp,
+  slideInFromRight 
+} from '@/lib/animations';
+import { Filter, SlidersHorizontal, X, Search, Star, Download, Eye, Calendar, Grid3X3, List, Sparkles } from 'lucide-react';
 import type { Bot, Category } from '@shared/schema';
 
 export default function BotListing() {
@@ -76,31 +86,61 @@ export default function BotListing() {
   };
 
   return (
-    <div className="min-h-screen py-8">
+    <motion.div 
+      className="min-h-screen py-8"
+      variants={pageTransition}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
       <div className="container mx-auto px-4 md:px-6">
-        <div className="mb-8">
-          <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">
-            {searchQuery ? `Search results for "${searchQuery}"` : 'Browse Bots'}
-          </h1>
-          <p className="text-muted-foreground">
+        <motion.div 
+          className="mb-8"
+          variants={fadeInUp}
+          initial="initial"
+          animate="animate"
+        >
+          <motion.h1 
+            className="font-display text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            {debouncedSearch ? `Search results for "${debouncedSearch}"` : 'Browse Bots'}
+          </motion.h1>
+          <motion.p 
+            className="text-muted-foreground text-lg"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
             Discover automation bots to streamline your workflow
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         <div className="flex gap-8">
           {/* Sidebar Filters - Desktop */}
-          <aside className="hidden lg:block w-64 flex-shrink-0">
-            <Card className="p-6 sticky top-24 space-y-6">
+          <motion.aside 
+            className="hidden lg:block w-64 flex-shrink-0"
+            variants={slideInFromRight}
+            initial="initial"
+            animate="animate"
+          >
+            <AdvancedCard className="p-6 sticky top-24 space-y-6" glow hover3d>
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Filters</h3>
-                <Button
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Filters
+                </h3>
+                <InteractiveButton
                   variant="ghost"
                   size="sm"
                   onClick={clearFilters}
                   data-testid="button-clear-filters"
+                  ripple
                 >
                   Clear
-                </Button>
+                </InteractiveButton>
               </div>
 
               {/* Categories */}
@@ -233,57 +273,158 @@ export default function BotListing() {
           {/* Main Content */}
           <div className="flex-1 space-y-6">
             {/* Sort Controls */}
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                {bots ? `${bots.length} bots found` : 'Loading...'}
-              </p>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-48" data-testid="select-sort">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="trending">Trending</SelectItem>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="rating">Highest Rated</SelectItem>
-                  <SelectItem value="downloads">Most Downloads</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <motion.div 
+              className="flex items-center justify-between mb-6"
+              variants={fadeInUp}
+              initial="initial"
+              animate="animate"
+            >
+              <div className="flex items-center gap-4">
+                <motion.p 
+                  className="text-sm text-muted-foreground"
+                  animate={{ opacity: bots ? 1 : 0.5 }}
+                >
+                  {bots ? (
+                    <span className="flex items-center gap-2">
+                      <Badge variant="outline" className="font-mono">
+                        {bots.length}
+                      </Badge>
+                      bots found
+                    </span>
+                  ) : (
+                    'Loading...'
+                  )}
+                </motion.p>
+                
+                {/* View Mode Toggle */}
+                <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+                  <InteractiveButton
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                  </InteractiveButton>
+                  <InteractiveButton
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="h-8 w-8 p-0"
+                  >
+                    <List className="h-4 w-4" />
+                  </InteractiveButton>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-48" data-testid="select-sort">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="trending">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4" />
+                        Trending
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="newest">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Newest
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="rating">
+                      <div className="flex items-center gap-2">
+                        <Star className="h-4 w-4" />
+                        Highest Rated
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="downloads">
+                      <div className="flex items-center gap-2">
+                        <Download className="h-4 w-4" />
+                        Most Downloads
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </motion.div>
 
             {/* Bot Grid */}
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <Card key={i}>
-                    <Skeleton className="aspect-video w-full" />
-                    <div className="p-4 space-y-3">
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-2/3" />
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : bots && bots.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {bots.map((bot) => (
-                  <BotCard key={bot.id} bot={bot} />
-                ))}
-              </div>
-            ) : (
-              <Card className="p-12 text-center">
-                <Filter className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="font-semibold text-lg mb-2">No bots found</h3>
-                <p className="text-muted-foreground mb-4">
-                  Try adjusting your filters or search query
-                </p>
-                <Button variant="outline" onClick={clearFilters}>
-                  Clear Filters
-                </Button>
-              </Card>
-            )}
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <BotGridSkeleton count={6} />
+                </motion.div>
+              ) : bots && bots.length > 0 ? (
+                <motion.div
+                  key="bots"
+                  className={viewMode === 'grid' 
+                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+                    : "space-y-4"
+                  }
+                  variants={staggerContainer}
+                  initial="initial"
+                  animate="animate"
+                >
+                  {bots.map((bot, index) => (
+                    <motion.div
+                      key={bot.id}
+                      variants={staggerItem}
+                      custom={index}
+                      layout
+                    >
+                      <BotCard bot={bot} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                >
+                  <AdvancedCard className="p-12 text-center" glow>
+                    <motion.div
+                      animate={{ 
+                        rotate: [0, 10, -10, 0],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{ 
+                        duration: 2, 
+                        repeat: Infinity,
+                        repeatDelay: 3
+                      }}
+                    >
+                      <Filter className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                    </motion.div>
+                    <h3 className="font-semibold text-xl mb-2">No bots found</h3>
+                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                      Try adjusting your filters or search query to discover amazing automation bots
+                    </p>
+                    <InteractiveButton 
+                      variant="outline" 
+                      onClick={clearFilters}
+                      magnetic
+                      glow
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Clear Filters
+                    </InteractiveButton>
+                  </AdvancedCard>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
