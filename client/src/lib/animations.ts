@@ -488,3 +488,15 @@ export const errorShake: Variants = {
     },
   },
 };
+
+// Responsive animation utility
+export function getResponsiveAnimation(deviceInfo: any) {
+  return {
+    // Reduce animations on mobile for performance
+    duration: deviceInfo.type === 'mobile' ? 0.2 : 0.3,
+    // Disable complex animations if user prefers reduced motion
+    enabled: !deviceInfo.prefersReducedMotion,
+    // Use simpler animations on low-end devices
+    complexity: deviceInfo.pixelRatio >= 2 ? 'high' : 'low',
+  };
+}

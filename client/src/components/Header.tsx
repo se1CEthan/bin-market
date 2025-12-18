@@ -12,12 +12,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { AdvancedSearch } from '@/components/AdvancedSearch';
 import { NotificationBell } from '@/components/NotificationCenter';
-import { Search, Upload, User, LogOut, Settings, ShoppingBag, LayoutDashboard, Heart, FolderOpen, GitCompare, Bell, Zap, TrendingUp, Sparkles, Command } from 'lucide-react';
+import { Search, Upload, User, LogOut, Settings, ShoppingBag, LayoutDashboard, Heart, FolderOpen, GitCompare, Bell, Zap, TrendingUp, Sparkles, Command, Menu, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useLiveStats } from '@/lib/live-data';
+import { useDeviceInfo, getResponsiveAnimation } from '@/lib/responsive';
 import logoUrl from '@assets/bin-high-resolution-logo-transparent_1763235895212.png';
 
 export function Header() {
@@ -26,7 +27,10 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { stats: liveStats } = useLiveStats();
+  const deviceInfo = useDeviceInfo();
+  const animationConfig = getResponsiveAnimation(deviceInfo);
 
   // Advanced scroll detection
   useEffect(() => {
@@ -75,55 +79,65 @@ export function Header() {
       >
 
 
-        <div className="container mx-auto flex h-18 md:h-20 items-center justify-between px-4 md:px-6">
-          <div className="flex items-center gap-6 md:gap-8">
+        <div className="container mx-auto flex h-14 xs:h-16 sm:h-18 md:h-20 items-center justify-between px-2 xs:px-4 md:px-6">
+          <div className="flex items-center gap-2 xs:gap-4 sm:gap-6 md:gap-8">
             <Link href="/">
               <motion.div 
-                className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md p-2 -ml-2 cursor-pointer" 
+                className="flex items-center gap-1 xs:gap-2 hover-elevate active-elevate-2 rounded-md p-1 xs:p-2 -ml-1 xs:-ml-2 cursor-pointer" 
                 data-testid="link-home"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={animationConfig.enabled ? { scale: 1.05 } : {}}
+                whileTap={animationConfig.enabled ? { scale: 0.95 } : {}}
               >
                 <motion.img 
                   src={logoUrl} 
                   alt="BIN Logo" 
-                  className="h-12 md:h-14 w-auto object-contain" 
-                  animate={{ rotate: [0, 2, -2, 0] }}
+                  className="h-8 xs:h-10 sm:h-12 md:h-14 lg:h-16 w-auto object-contain" 
+                  animate={animationConfig.enabled ? { rotate: [0, 2, -2, 0] } : {}}
                   transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                 />
-
               </motion.div>
             </Link>
 
-            {/* Quick Navigation */}
-            <nav className="hidden lg:flex items-center gap-1">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="ghost" size="sm" asChild>
+            {/* Responsive Quick Navigation */}
+            <nav className="hidden md:flex lg:flex items-center gap-0.5 sm:gap-1">
+              <motion.div 
+                whileHover={animationConfig.enabled ? { scale: 1.05 } : {}} 
+                whileTap={animationConfig.enabled ? { scale: 0.95 } : {}}
+              >
+                <Button variant="ghost" size={deviceInfo.type === 'tablet' ? 'sm' : 'default'} asChild>
                   <Link href="/bots">
-                    <Zap className="w-4 h-4 mr-1" />
-                    Explore
+                    <Zap className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    <span className="hidden lg:inline">Explore</span>
+                    <span className="lg:hidden text-xs sm:text-sm">Explore</span>
                   </Link>
                 </Button>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="ghost" size="sm" asChild>
+              <motion.div 
+                whileHover={animationConfig.enabled ? { scale: 1.05 } : {}} 
+                whileTap={animationConfig.enabled ? { scale: 0.95 } : {}}
+              >
+                <Button variant="ghost" size={deviceInfo.type === 'tablet' ? 'sm' : 'default'} asChild>
                   <Link href="/trending">
-                    <TrendingUp className="w-4 h-4 mr-1" />
-                    Trending
+                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    <span className="hidden lg:inline">Trending</span>
+                    <span className="lg:hidden text-xs sm:text-sm">Hot</span>
                   </Link>
                 </Button>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="ghost" size="sm" asChild>
+              <motion.div 
+                whileHover={animationConfig.enabled ? { scale: 1.05 } : {}} 
+                whileTap={animationConfig.enabled ? { scale: 0.95 } : {}}
+              >
+                <Button variant="ghost" size={deviceInfo.type === 'tablet' ? 'sm' : 'default'} asChild>
                   <Link href="/categories">
-                    Categories
+                    <span className="text-xs sm:text-sm">Categories</span>
                   </Link>
                 </Button>
               </motion.div>
             </nav>
 
-            {/* Enhanced Search */}
-            <div className="hidden md:block w-full max-w-sm relative">
+            {/* Responsive Enhanced Search */}
+            <div className="hidden sm:block w-full max-w-xs sm:max-w-sm lg:max-w-md relative">
               <AdvancedSearch 
                 onSearch={(query, filters) => {
                   const params = new URLSearchParams();
@@ -133,38 +147,62 @@ export function Header() {
                   });
                   navigate(`/bots?${params.toString()}`);
                 }}
-                placeholder="Search bots..."
-                className="w-full"
+                placeholder={deviceInfo.type === 'tablet' ? "Search..." : "Search bots..."}
+                className="w-full text-sm"
               />
               <motion.div
-                className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-xs text-muted-foreground"
+                initial={animationConfig.enabled ? { opacity: 0 } : {}}
+                animate={animationConfig.enabled ? { opacity: 1 } : {}}
                 transition={{ delay: 1 }}
               >
-                <Command className="w-3 h-3" />
-                <span>K</span>
+                <Command className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                <span className="hidden sm:inline">K</span>
               </motion.div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 xs:gap-2">
+            {/* Mobile Menu Button */}
+            <div className="sm:hidden">
+              <motion.div
+                whileHover={animationConfig.enabled ? { scale: 1.05 } : {}}
+                whileTap={animationConfig.enabled ? { scale: 0.95 } : {}}
+              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowMobileMenu(!showMobileMenu)}
+                  className="h-8 w-8 xs:h-9 xs:w-9"
+                >
+                  {showMobileMenu ? (
+                    <X className="h-4 w-4 xs:h-5 xs:w-5" />
+                  ) : (
+                    <Menu className="h-4 w-4 xs:h-5 xs:w-5" />
+                  )}
+                </Button>
+              </motion.div>
+            </div>
+
             {user ? (
               <>
-                {/* Quick Actions */}
+                {/* Responsive Quick Actions */}
                 <motion.div 
-                  className="hidden sm:flex items-center gap-1"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  className="hidden sm:flex items-center gap-0.5 sm:gap-1"
+                  initial={animationConfig.enabled ? { opacity: 0, x: 20 } : {}}
+                  animate={animationConfig.enabled ? { opacity: 1, x: 0 } : {}}
                   transition={{ delay: 0.3 }}
                 >
-                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                    <Button variant="ghost" size="icon" asChild className="relative">
+                  <motion.div 
+                    whileHover={animationConfig.enabled ? { scale: 1.1 } : {}} 
+                    whileTap={animationConfig.enabled ? { scale: 0.9 } : {}}
+                  >
+                    <Button variant="ghost" size="icon" asChild className="relative h-8 w-8 sm:h-9 sm:w-9">
                       <Link href="/collections">
-                        <Heart className="h-5 w-5" />
+                        <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
                         <Badge 
                           variant="secondary" 
-                          className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs"
+                          className="absolute -top-0.5 -right-0.5 h-3 w-3 sm:h-4 sm:w-4 p-0 text-xs flex items-center justify-center"
                         >
                           3
                         </Badge>
@@ -172,30 +210,33 @@ export function Header() {
                     </Button>
                   </motion.div>
                   
-                  <NotificationBell />
+                  <div className="hidden md:block">
+                    <NotificationBell />
+                  </div>
                 </motion.div>
 
                 {user.isDeveloper && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={animationConfig.enabled ? { opacity: 0, scale: 0.8 } : {}}
+                    animate={animationConfig.enabled ? { opacity: 1, scale: 1 } : {}}
                     transition={{ delay: 0.4 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={animationConfig.enabled ? { scale: 1.05 } : {}}
+                    whileTap={animationConfig.enabled ? { scale: 0.95 } : {}}
                   >
                     <Button
                       variant="outline"
-                      size="default"
+                      size={deviceInfo.type === 'tablet' ? 'sm' : 'default'}
                       asChild
-                      className="hidden sm:flex bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 hover:from-primary/20 hover:to-secondary/20"
+                      className="hidden md:flex bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20 hover:from-primary/20 hover:to-secondary/20 text-xs sm:text-sm"
                       data-testid="button-upload-bot"
                     >
                       <Link href="/developer/upload">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload Bot
+                        <Upload className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                        <span className="hidden lg:inline">Upload Bot</span>
+                        <span className="lg:hidden">Upload</span>
                         <motion.div
-                          className="ml-2 w-2 h-2 bg-green-500 rounded-full"
-                          animate={{ scale: [1, 1.2, 1] }}
+                          className="ml-1 sm:ml-2 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full"
+                          animate={animationConfig.enabled ? { scale: [1, 1.2, 1] } : {}}
                           transition={{ duration: 2, repeat: Infinity }}
                         />
                       </Link>
@@ -369,34 +410,102 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile search */}
+        {/* Mobile search - always visible on mobile */}
+        <div className="sm:hidden border-t border-border px-2 xs:px-4 py-2 xs:py-3">
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 xs:h-4 xs:w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search bots..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 xs:pl-9 pr-12 text-sm bg-card/50 backdrop-blur border-primary/20 focus:border-primary/50"
+              data-testid="input-search-mobile"
+            />
+            <motion.div
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"
+              initial={animationConfig.enabled ? { opacity: 0 } : {}}
+              animate={animationConfig.enabled ? { opacity: 1 } : {}}
+              transition={{ delay: 0.5 }}
+            >
+              ⌘K
+            </motion.div>
+          </form>
+        </div>
+
+        {/* Mobile Menu */}
         <AnimatePresence>
-          <motion.div 
-            className="md:hidden border-t border-border px-4 py-3"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-          >
-            <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search bots..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-card/50 backdrop-blur border-primary/20 focus:border-primary/50"
-                data-testid="input-search-mobile"
-              />
-              <motion.div
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                ⌘K
-              </motion.div>
-            </form>
-          </motion.div>
+          {showMobileMenu && (
+            <motion.div
+              className="sm:hidden absolute top-full left-0 right-0 bg-background/95 backdrop-blur-md border-b border-border shadow-lg z-50"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="container mx-auto px-2 xs:px-4 py-3 xs:py-4">
+                <nav className="space-y-2">
+                  <Link href="/bots">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-sm"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      <Zap className="w-4 h-4 mr-2" />
+                      Explore Bots
+                    </Button>
+                  </Link>
+                  <Link href="/trending">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-sm"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      Trending
+                    </Button>
+                  </Link>
+                  <Link href="/categories">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-sm"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      Categories
+                    </Button>
+                  </Link>
+                  
+                  {user && (
+                    <>
+                      <div className="border-t border-border my-2"></div>
+                      <Link href="/collections">
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start text-sm"
+                          onClick={() => setShowMobileMenu(false)}
+                        >
+                          <Heart className="w-4 h-4 mr-2" />
+                          Collections
+                        </Button>
+                      </Link>
+                      {user.isDeveloper && (
+                        <Link href="/developer/upload">
+                          <Button 
+                            variant="ghost" 
+                            className="w-full justify-start text-sm"
+                            onClick={() => setShowMobileMenu(false)}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload Bot
+                          </Button>
+                        </Link>
+                      )}
+                    </>
+                  )}
+                </nav>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </motion.header>
 
