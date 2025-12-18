@@ -27,7 +27,7 @@ import {
   fadeInUp,
   slideInFromRight 
 } from '@/lib/animations';
-import { Filter, SlidersHorizontal, X, Search, Star, Download, Eye, Calendar, Grid3X3, List, Sparkles } from 'lucide-react';
+import { Filter, SlidersHorizontal, X, Search, Star, Download, Eye, Calendar, Grid3X3, List, Sparkles, TrendingUp } from 'lucide-react';
 import type { Bot, Category } from '@shared/schema';
 
 export default function BotListing() {
@@ -184,8 +184,8 @@ export default function BotListing() {
                   </div>
                 </div>
               </div>
-            </Card>
-          </aside>
+            </AdvancedCard>
+          </motion.aside>
 
           {/* Mobile Filter Toggle */}
           <div className="lg:hidden fixed bottom-4 right-4 z-50">
@@ -428,6 +428,6 @@ export default function BotListing() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
