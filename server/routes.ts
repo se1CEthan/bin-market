@@ -1,0 +1,745 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
+import multer from "multer";
+import path from "path";
+import { storage } from "./storage";
+import { setupAuth, requireAuth, requireDeveloper, requireAdmin } from "./auth";
+import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: 'uploads/',
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  }),
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
+});
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  setupAuth(app);
+
+  // PayPal routes
+  app.get("/api/paypal/setup", loadPaypalDefault);
+  app.post("/api/paypal/order", createPaypalOrder);
+  app.post("/api/paypal/order/:orderID/capture", capturePaypalOrder);
+
+  // Public routes
+  app.get("/api/stats", async (req, res) => {
+    try {
+      const stats = await storage.getPlatformStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  app.get("/api/categories", async (req, res) => {
+    try {
+      const categories = await storage.getCategories();
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch categories" });
+    }
+  });
+
+  app.get("/api/bots/trending", async (req, res) => {
+    try {
+      const bots = await storage.getTrendingBots(8);
+      const botsWithDetails = await Promise.all(
+        bots.map(async (bot) => {
+          const developer = await storage.getUser(bot.developerId);
+          const category = await storage.getCategoryById(bot.categoryId);
+          return {
+            ...bot,
+            developer: developer ? { name: developer.name, avatarUrl: developer.avatarUrl } : null,
+            category: category ? { name: category.name } : null,
+          };
+        })
+      );
+      res.json(botsWithDetails);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch trending bots" });
+    }
+  });
+
+  app.get("/api/bots", async (req, res) => {
+    try {
+      const { search, category, sortBy, minPrice, maxPrice } = req.query;
+      const filters = {
+        search: search as string,
+        categoryId: category as string,
+        sortBy: sortBy as string,
+        minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
+        maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
+        status: 'approved',
+      };
+
+      const bots = await storage.getBots(filters);
+      const botsWithDetails = await Promise.all(
+        bots.map(async (bot) => {
+          const developer = await storage.getUser(bot.developerId);
+          const category = await storage.getCategoryById(bot.categoryId);
+          return {
+            ...bot,
+            developer: developer ? { name: developer.name, avatarUrl: developer.avatarUrl } : null,
+            category: category ? { name: category.name } : null,
+          };
+        })
+      );
+      res.json(botsWithDetails);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bots" });
+    }
+  });
+
+  app.get("/api/bots/:id", async (req, res) => {
+    try {
+      const bot = await storage.getBotById(req.params.id);
+      if (!bot) {
+        return res.status(404).json({ error: "Bot not found" });
+      }
+
+      await storage.incrementBotViews(bot.id);
+
+      const developer = await storage.getUser(bot.developerId);
+      const category = await storage.getCategoryById(bot.categoryId);
+      
+      let hasPurchased = false;
+      if (req.user) {
+        hasPurchased = await storage.hasPurchased((req.user as any).id, bot.id);
+      }
+
+      res.json({
+        ...bot,
+        developer: developer ? {
+          id: developer.id,
+          name: developer.name,
+          avatarUrl: developer.avatarUrl,
+          email: developer.email,
+        } : null,
+        category: category ? { name: category.name } : null,
+        hasPurchased,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bot" });
+    }
+  });
+
+  app.get("/api/bots/:id/reviews", async (req, res) => {
+    try {
+      const reviews = await storage.getReviewsByBot(req.params.id);
+      const reviewsWithUsers = await Promise.all(
+        reviews.map(async (review) => {
+          const user = await storage.getUser(review.userId);
+          return {
+            ...review,
+            user: user ? { name: user.name, avatarUrl: user.avatarUrl } : null,
+          };
+        })
+      );
+      res.json(reviewsWithUsers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+
+  // Analytics routes
+  app.get("/api/developer/analytics/:botId", requireDeveloper, async (req, res) => {
+    try {
+      const { AnalyticsService } = await import('./analytics');
+      const analytics = await AnalyticsService.getBotAnalytics(req.params.botId, (req.user as any).id);
+      res.json(analytics);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  app.get("/api/admin/analytics", requireAdmin, async (req, res) => {
+    try {
+      const { AnalyticsService } = await import('./analytics');
+      const analytics = await AnalyticsService.getPlatformAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch platform analytics" });
+    }
+  });
+
+  // Advanced search routes
+  app.get("/api/search/suggestions", async (req, res) => {
+    try {
+      const { query } = req.query;
+      if (!query || typeof query !== 'string' || query.length < 2) {
+        return res.json([]);
+      }
+
+      // Mock search suggestions - in production, use Elasticsearch or similar
+      const suggestions = [
+        { id: '1', text: 'WhatsApp automation', type: 'category', count: 25 },
+        { id: '2', text: 'Instagram bot', type: 'bot', trending: true },
+        { id: '3', text: 'Data scraper', type: 'bot', count: 15 },
+        { id: '4', text: 'Business automation', type: 'category', count: 30 },
+      ].filter(s => s.text.toLowerCase().includes(query.toLowerCase()));
+
+      res.json(suggestions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch suggestions" });
+    }
+  });
+
+  app.get("/api/search/trending", async (req, res) => {
+    try {
+      // Mock trending searches - in production, track real search data
+      const trending = [
+        'WhatsApp automation',
+        'Instagram followers',
+        'Data scraping',
+        'Email marketing',
+        'Social media bot',
+      ];
+      res.json(trending);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch trending searches" });
+    }
+  });
+
+  app.get("/api/search/recommendations", requireAuth, async (req, res) => {
+    try {
+      // Mock AI recommendations based on user behavior
+      const recommendations = [
+        { id: '1', text: 'WhatsApp business bot', type: 'bot' },
+        { id: '2', text: 'Social media scheduler', type: 'bot' },
+        { id: '3', text: 'Lead generation tool', type: 'bot' },
+      ];
+      res.json(recommendations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch recommendations" });
+    }
+  });
+
+  // Notification routes
+  app.get("/api/notifications", requireAuth, async (req, res) => {
+    try {
+      // Mock notifications - in production, fetch from database
+      const notifications = [
+        {
+          id: '1',
+          type: 'sale',
+          title: 'New Sale!',
+          message: 'Your WhatsApp Bot was purchased',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+          data: { amount: '49.99' },
+        },
+        {
+          id: '2',
+          type: 'review',
+          title: 'New Review',
+          message: 'Someone left a 5-star review on your bot',
+          isRead: true,
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+        },
+      ];
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  app.get("/api/notifications/unread-count", requireAuth, async (req, res) => {
+    try {
+      // Mock unread count
+      res.json({ count: 3 });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch unread count" });
+    }
+  });
+
+  app.patch("/api/notifications/:id/read", requireAuth, async (req, res) => {
+    try {
+      // Mock mark as read
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark as read" });
+    }
+  });
+
+  app.patch("/api/notifications/mark-all-read", requireAuth, async (req, res) => {
+    try {
+      // Mock mark all as read
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark all as read" });
+    }
+  });
+
+  app.delete("/api/notifications/:id", requireAuth, async (req, res) => {
+    try {
+      // Mock delete notification
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete notification" });
+    }
+  });
+
+  // Bot management routes
+  app.patch("/api/developer/bots/:id", requireDeveloper, async (req, res) => {
+    try {
+      const bot = await storage.updateBot(req.params.id, req.body);
+      res.json(bot);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update bot" });
+    }
+  });
+
+  app.delete("/api/developer/bots/:id", requireDeveloper, async (req, res) => {
+    try {
+      await storage.deleteBot(req.params.id, (req.user as any).id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete bot" });
+    }
+  });
+
+  app.patch("/api/developer/bots/:id/featured", requireDeveloper, async (req, res) => {
+    try {
+      const { isFeatured } = req.body;
+      const bot = await storage.updateBot(req.params.id, { isFeatured });
+      res.json(bot);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update featured status" });
+    }
+  });
+
+  // Protected routes - Developer
+  app.post("/api/developer/signup", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.updateUser((req.user as any).id, { isDeveloper: true });
+      res.json({ user });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to become developer" });
+    }
+  });
+
+  app.post("/api/developer/paypal", requireDeveloper, async (req, res) => {
+    try {
+      const { paypalEmail, paypalEnabled } = req.body;
+      
+      if (!paypalEmail || typeof paypalEmail !== 'string') {
+        return res.status(400).json({ error: "Valid PayPal email is required" });
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(paypalEmail)) {
+        return res.status(400).json({ error: "Invalid email format" });
+      }
+
+      const user = await storage.updateUser((req.user as any).id, {
+        paypalEmail,
+        paypalEnabled: paypalEnabled !== false, // Default to true
+      });
+
+      res.json({ 
+        success: true,
+        paypalEmail: user?.paypalEmail,
+        paypalEnabled: user?.paypalEnabled,
+      });
+    } catch (error) {
+      console.error('PayPal setup error:', error);
+      res.status(500).json({ error: "Failed to update PayPal settings" });
+    }
+  });
+
+  app.get("/api/developer/paypal", requireDeveloper, async (req, res) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      res.json({
+        paypalEmail: user?.paypalEmail || null,
+        paypalEnabled: user?.paypalEnabled || false,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch PayPal settings" });
+    }
+  });
+
+  app.get("/api/developer/stats", requireDeveloper, async (req, res) => {
+    try {
+      const stats = await storage.getDeveloperStats((req.user as any).id);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  app.get("/api/developer/bots", requireDeveloper, async (req, res) => {
+    try {
+      const bots = await storage.getBotsByDeveloper((req.user as any).id);
+      const botsWithDetails = await Promise.all(
+        bots.map(async (bot) => {
+          const category = await storage.getCategoryById(bot.categoryId);
+          return {
+            ...bot,
+            category: category ? { name: category.name } : null,
+          };
+        })
+      );
+      res.json(botsWithDetails);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bots" });
+    }
+  });
+
+  app.get("/api/developer/sales", requireDeveloper, async (req, res) => {
+    try {
+      // Return mock data for now - can be enhanced with real sales data grouped by date
+      res.json([
+        { date: '2024-01', sales: 5, earnings: 475 },
+        { date: '2024-02', sales: 8, earnings: 760 },
+        { date: '2024-03', sales: 12, earnings: 1140 },
+      ]);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch sales data" });
+    }
+  });
+
+  app.get("/api/developer/recent-sales", requireDeveloper, async (req, res) => {
+    try {
+      const transactions = await storage.getTransactionsByDeveloper((req.user as any).id);
+      const salesWithDetails = await Promise.all(
+        transactions.slice(0, 10).map(async (transaction) => {
+          const bot = await storage.getBotById(transaction.botId);
+          const buyer = await storage.getUser(transaction.buyerId);
+          return {
+            ...transaction,
+            botTitle: bot?.title,
+            buyerName: buyer?.name,
+          };
+        })
+      );
+      res.json(salesWithDetails);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch recent sales" });
+    }
+  });
+
+  app.get("/api/developer/payouts", requireDeveloper, async (req, res) => {
+    try {
+      const payouts = await storage.getPayoutRequestsByDeveloper((req.user as any).id);
+      res.json(payouts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch payouts" });
+    }
+  });
+
+  app.post("/api/bots/upload", requireDeveloper, upload.fields([
+    { name: 'botFile', maxCount: 1 },
+    { name: 'thumbnail', maxCount: 1 },
+    { name: 'demoVideo', maxCount: 1 },
+    { name: 'screenshots', maxCount: 5 },
+  ]), async (req, res) => {
+    try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const { title, description, price, categoryId, requirements, supportedOS, features } = req.body;
+
+      const botData: any = {
+        title,
+        description,
+        price,
+        categoryId,
+        developerId: (req.user as any).id,
+        status: 'pending',
+      };
+
+      if (requirements) botData.requirements = requirements;
+      if (supportedOS) botData.supportedOS = JSON.parse(supportedOS);
+      if (features) botData.features = JSON.parse(features);
+
+      if (files.botFile?.[0]) {
+        botData.fileUrl = `/uploads/${files.botFile[0].filename}`;
+        botData.fileName = files.botFile[0].originalname;
+      }
+
+      if (files.thumbnail?.[0]) {
+        botData.thumbnailUrl = `/uploads/${files.thumbnail[0].filename}`;
+      }
+
+      if (files.demoVideo?.[0]) {
+        botData.demoVideoUrl = `/uploads/${files.demoVideo[0].filename}`;
+      }
+
+      if (files.screenshots) {
+        botData.screenshots = files.screenshots.map(file => `/uploads/${file.filename}`);
+      }
+
+      const bot = await storage.createBot(botData);
+      res.json(bot);
+    } catch (error) {
+      console.error('Upload error:', error);
+      res.status(500).json({ error: "Failed to upload bot" });
+    }
+  });
+
+  app.post("/api/bots/:id/purchase", requireAuth, async (req, res) => {
+    try {
+      const bot = await storage.getBotById(req.params.id);
+      if (!bot) {
+        return res.status(404).json({ error: "Bot not found" });
+      }
+
+      const hasPurchased = await storage.hasPurchased((req.user as any).id, bot.id);
+      if (hasPurchased) {
+        return res.status(400).json({ error: "Already purchased" });
+      }
+
+      const amount = parseFloat(bot.price);
+      const platformFee = (amount * 0.10).toFixed(2);
+      const developerEarnings = (amount * 0.90).toFixed(2);
+
+      // Create PayPal order
+      console.log('Creating PayPal order for bot:', bot.id, 'price:', bot.price);
+      const paypalResponse = await fetch(`${req.protocol}://${req.get('host')}/api/paypal/order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: bot.price,
+          currency: 'USD',
+          intent: 'CAPTURE'
+        })
+      });
+
+      if (!paypalResponse.ok) {
+        const errorText = await paypalResponse.text();
+        console.error('PayPal order creation failed:', errorText);
+        throw new Error(`Failed to create PayPal order: ${errorText}`);
+      }
+
+      const paypalOrder = await paypalResponse.json();
+      console.log('PayPal order created:', paypalOrder.id);
+
+      // Create transaction record
+      const transaction = await storage.createTransaction({
+        buyerId: (req.user as any).id,
+        botId: bot.id,
+        developerId: bot.developerId,
+        amount: amount.toString(),
+        platformFee,
+        developerEarnings,
+        status: 'pending',
+        paypalOrderId: paypalOrder.id,
+      });
+
+      res.json({ 
+        success: true, 
+        paypalOrderId: paypalOrder.id,
+        approvalUrl: paypalOrder.links.find((link: any) => link.rel === 'approve')?.href,
+        transaction 
+      });
+    } catch (error) {
+      console.error('Purchase error:', error);
+      res.status(500).json({ error: "Failed to initiate purchase" });
+    }
+  });
+
+  // Capture PayPal payment after user approves
+  app.post("/api/bots/:id/capture/:orderId", requireAuth, async (req, res) => {
+    try {
+      const { orderId } = req.params;
+
+      // Capture the PayPal order
+      const captureResponse = await fetch(`${req.protocol}://${req.get('host')}/api/paypal/order/${orderId}/capture`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!captureResponse.ok) {
+        throw new Error('Failed to capture PayPal payment');
+      }
+
+      const captureData = await captureResponse.json();
+
+      // Update transaction status
+      const transaction = await storage.getTransactionByPaypalOrderId(orderId);
+      if (transaction) {
+        await storage.updateTransactionStatus(transaction.id, 'completed');
+        
+        // Increment download count
+        const bot = await storage.getBotById(req.params.id);
+        if (bot) {
+          await storage.incrementBotDownloads(bot.id);
+          
+          // Send automatic payout to developer if PayPal is enabled
+          const developer = await storage.getUser(bot.developerId);
+          if (developer?.paypalEnabled && developer?.paypalEmail) {
+            try {
+              const { sendAutomaticPayout } = await import('./paypal-payout');
+              const amount = parseFloat(transaction.amount);
+              
+              const payoutResult = await sendAutomaticPayout(
+                developer.paypalEmail,
+                amount,
+                bot.title,
+                transaction.id
+              );
+
+              if (payoutResult.success) {
+                console.log(`Automatic payout sent to ${developer.paypalEmail}: $${(amount * 0.90).toFixed(2)}`);
+                // Update transaction with payout info
+                await storage.updateTransaction(transaction.id, {
+                  status: 'completed',
+                });
+              } else {
+                console.error('Automatic payout failed:', payoutResult.error);
+                // Transaction is still completed, but payout failed
+                // Admin can manually process or retry
+              }
+            } catch (payoutError) {
+              console.error('Payout processing error:', payoutError);
+              // Continue - payment was captured successfully
+            }
+          }
+        }
+      }
+
+      res.json({ success: true, captureData });
+    } catch (error) {
+      console.error('Capture error:', error);
+      res.status(500).json({ error: "Failed to capture payment" });
+    }
+  });
+
+  // Protected routes - User account
+  app.get("/api/account/purchases", requireAuth, async (req, res) => {
+    try {
+      const transactions = await storage.getTransactionsByBuyer((req.user as any).id);
+      const purchasesWithDetails = await Promise.all(
+        transactions.filter(t => t.status === 'completed').map(async (transaction) => {
+          const bot = await storage.getBotById(transaction.botId);
+          return {
+            ...transaction,
+            bot: bot ? {
+              id: bot.id,
+              title: bot.title,
+              thumbnailUrl: bot.thumbnailUrl,
+            } : null,
+          };
+        })
+      );
+      res.json(purchasesWithDetails);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch purchases" });
+    }
+  });
+
+  // Protected routes - Admin
+  app.get("/api/admin/stats", requireAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getAdminStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch admin stats" });
+    }
+  });
+
+  app.get("/api/admin/pending-bots", requireAdmin, async (req, res) => {
+    try {
+      const bots = await storage.getPendingBots();
+      const botsWithDetails = await Promise.all(
+        bots.map(async (bot) => {
+          const developer = await storage.getUser(bot.developerId);
+          const category = await storage.getCategoryById(bot.categoryId);
+          return {
+            ...bot,
+            developer: developer ? { name: developer.name } : null,
+            category: category ? { name: category.name } : null,
+          };
+        })
+      );
+      res.json(botsWithDetails);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch pending bots" });
+    }
+  });
+
+  app.post("/api/admin/bots/:id/status", requireAdmin, async (req, res) => {
+    try {
+      const { status } = req.body;
+      if (!['approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+
+      const bot = await storage.updateBot(req.params.id, { status });
+      res.json(bot);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update bot status" });
+    }
+  });
+
+  // Create HTTP server
+  const httpServer = createServer(app);
+
+  // WebSocket setup for real-time chat
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+
+  const clients = new Map<string, WebSocket>();
+
+  wss.on('connection', (ws, req) => {
+    console.log('WebSocket client connected');
+
+    ws.on('message', async (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+
+        if (message.type === 'register' && message.userId) {
+          clients.set(message.userId, ws);
+        }
+
+        if (message.type === 'send_message' && message.receiverId && message.message) {
+          const chatMessage = await storage.createChatMessage({
+            senderId: message.senderId,
+            receiverId: message.receiverId,
+            botId: message.botId || null,
+            message: message.message,
+          });
+
+          const sender = await storage.getUser(message.senderId);
+          const messageWithSender = {
+            ...chatMessage,
+            sender: sender ? { name: sender.name, avatarUrl: sender.avatarUrl } : null,
+          };
+
+          const receiverWs = clients.get(message.receiverId);
+          if (receiverWs && receiverWs.readyState === WebSocket.OPEN) {
+            receiverWs.send(JSON.stringify({
+              type: 'message',
+              message: messageWithSender,
+            }));
+          }
+
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'message',
+              message: messageWithSender,
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      for (const [userId, socket] of clients.entries()) {
+        if (socket === ws) {
+          clients.delete(userId);
+          break;
+        }
+      }
+      console.log('WebSocket client disconnected');
+    });
+  });
+
+  return httpServer;
+}

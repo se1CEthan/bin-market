@@ -1,0 +1,11 @@
+# Allow all search engines
+User-agent: *
+Allow: /
+
+# Disallow admin and account pages
+Disallow: /admin/
+Disallow: /account/
+Disallow: /developer/dashboard
+
+# Sitemap location
+Sitemap: https://braininspirednetwork.cloud/sitemap.xml
