@@ -16,7 +16,7 @@ import {
   Eye,
   Zap,
   ArrowRight,
-  Fire,
+  Flame,
   Crown
 } from 'lucide-react';
 import { useTrendingBots } from '@/lib/live-data';
@@ -78,7 +78,7 @@ export function TrendingBots({
                     #{index + 1}
                   </span>
                   {index === 0 && <Crown className="w-4 h-4 text-yellow-500" />}
-                  {index < 3 && <Fire className="w-4 h-4 text-orange-500" />}
+                  {index < 3 && <Flame className="w-4 h-4 text-orange-500" />}
                 </div>
                 <div>
                   <Link href={`/bot/${bot.id}`}>
@@ -119,7 +119,7 @@ export function TrendingBots({
                 <h3 className="font-semibold">Trending Bots</h3>
               </div>
               <Badge variant="secondary" className="flex items-center gap-1">
-                <Fire className="w-3 h-3 text-orange-500" />
+                <Flame className="w-3 h-3 text-orange-500" />
                 Hot
               </Badge>
             </div>
@@ -156,7 +156,7 @@ export function TrendingBots({
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
-                      <Fire className="w-4 h-4 text-orange-500" />
+                      <Flame className="w-4 h-4 text-orange-500" />
                     </motion.div>
                   )}
                 </div>
@@ -235,7 +235,7 @@ export function TrendingBots({
                       className="flex items-center gap-1"
                     >
                       {index === 0 && <Crown className="w-3 h-3" />}
-                      <Fire className="w-3 h-3" />
+                      <Flame className="w-3 h-3" />
                       #{index + 1}
                     </Badge>
                   </motion.div>

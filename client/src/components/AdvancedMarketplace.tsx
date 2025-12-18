@@ -31,7 +31,7 @@ import {
   List,
   BarChart3,
   Clock,
-  Fire,
+  Flame,
   Crown,
   Target,
   Rocket
@@ -61,7 +61,7 @@ export function AdvancedMarketplace({ className }: { className?: string }) {
       id: 'trending',
       title: 'Trending Now',
       description: 'Hottest bots gaining popularity',
-      icon: Fire,
+      icon: Flame,
       color: 'text-orange-500',
       count: trendingBots?.length || 0
     },
