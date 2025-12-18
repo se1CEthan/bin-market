@@ -7,7 +7,6 @@ import { storage } from "./storage";
 import { setupAuth, requireAuth, requireDeveloper, requireAdmin } from "./auth";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { AuthService } from "./services/auth";
-import { StripeService } from "./services/stripe";
 import { PayPalService } from "./services/paypal";
 import { LicenseService } from "./services/license";
 
@@ -163,59 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Stripe payment routes
-  app.post("/api/stripe/create-payment-intent", requireAuth, async (req, res) => {
-    try {
-      const { botId, amount } = req.body;
-      
-      if (!botId || !amount) {
-        return res.status(400).json({ error: "Bot ID and amount are required" });
-      }
 
-      const result = await StripeService.createPaymentIntent(
-        botId,
-        (req.user as any).id,
-        parseFloat(amount)
-      );
-
-      res.json(result);
-    } catch (error: any) {
-      console.error('Stripe payment intent error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.post("/api/stripe/webhook", async (req, res) => {
-    try {
-      const signature = req.headers['stripe-signature'] as string;
-      
-      if (!signature) {
-        return res.status(400).json({ error: "Missing Stripe signature" });
-      }
-
-      const result = await StripeService.handleWebhook(req.rawBody as Buffer, signature);
-      res.json(result);
-    } catch (error: any) {
-      console.error('Stripe webhook error:', error);
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.post("/api/stripe/confirm-payment", requireAuth, async (req, res) => {
-    try {
-      const { paymentIntentId } = req.body;
-      
-      if (!paymentIntentId) {
-        return res.status(400).json({ error: "Payment intent ID is required" });
-      }
-
-      const result = await StripeService.handlePaymentSuccess(paymentIntentId);
-      res.json(result);
-    } catch (error: any) {
-      console.error('Stripe payment confirmation error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
 
   // Enhanced PayPal routes
   app.post("/api/paypal/create-order", requireAuth, async (req, res) => {

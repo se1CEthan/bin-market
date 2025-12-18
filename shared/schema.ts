@@ -17,7 +17,7 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").default(false).notNull(),
   paypalEmail: text("paypal_email"), // Developer's PayPal email for automatic payouts
   paypalEnabled: boolean("paypal_enabled").default(false).notNull(), // Whether automatic payouts are enabled
-  stripeCustomerId: text("stripe_customer_id"), // Stripe customer ID for payments
+
   totalEarnings: decimal("total_earnings", { precision: 10, scale: 2 }).default("0"),
   availableBalance: decimal("available_balance", { precision: 10, scale: 2 }).default("0"),
   lastLoginAt: timestamp("last_login_at"),
@@ -69,8 +69,7 @@ export const transactions = pgTable("transactions", {
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(),
   developerEarnings: decimal("developer_earnings", { precision: 10, scale: 2 }).notNull(),
-  paymentMethod: text("payment_method").notNull(), // stripe, paypal
-  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  paymentMethod: text("payment_method").notNull(), // paypal
   paypalOrderId: text("paypal_order_id"),
   status: text("status").notNull().default("pending"), // pending, completed, refunded, failed
   refundReason: text("refund_reason"),
@@ -186,8 +185,7 @@ export const botVersions = pgTable("bot_versions", {
 export const paymentMethods = pgTable("payment_methods", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  type: text("type").notNull(), // stripe, paypal
-  stripePaymentMethodId: text("stripe_payment_method_id"),
+  type: text("type").notNull(), // paypal
   paypalEmail: text("paypal_email"),
   isDefault: boolean("is_default").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
