@@ -89,8 +89,8 @@ export default function VerifyEmail() {
         return (
           <div className="text-center space-y-4">
             <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto" />
-            <h3 className="text-lg font-semibold">Verifying your email...</h3>
-            <p className="text-gray-600">Please wait while we verify your email address.</p>
+            <h3 className="text-lg font-semibold text-white">Verifying your email...</h3>
+            <p className="text-gray-400">Please wait while we verify your email address.</p>
           </div>
         );
 
@@ -100,8 +100,8 @@ export default function VerifyEmail() {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <h3 className="text-lg font-semibold text-green-800">Email Verified!</h3>
-            <p className="text-gray-600">{message}</p>
+            <h3 className="text-lg font-semibold text-green-400">Email Verified!</h3>
+            <p className="text-gray-300">{message}</p>
             <p className="text-sm text-gray-500">Redirecting to login page...</p>
             <Button asChild className="bg-green-600 hover:bg-green-700">
               <Link to="/login">Continue to Login</Link>
@@ -115,8 +115,8 @@ export default function VerifyEmail() {
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
               <AlertCircle className="w-8 h-8 text-red-600" />
             </div>
-            <h3 className="text-lg font-semibold text-red-800">Verification Failed</h3>
-            <p className="text-gray-600">{message}</p>
+            <h3 className="text-lg font-semibold text-red-400">Verification Failed</h3>
+            <p className="text-gray-300">{message}</p>
             <div className="space-y-2">
               <Button asChild variant="outline">
                 <Link to="/login">Back to Login</Link>
@@ -141,8 +141,8 @@ export default function VerifyEmail() {
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
                 <Mail className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold">Resend Verification Email</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg font-semibold text-white">Resend Verification Email</h3>
+              <p className="text-gray-400">
                 Enter your email address to receive a new verification link.
               </p>
             </div>
@@ -157,7 +157,7 @@ export default function VerifyEmail() {
 
             <form onSubmit={handleResendVerification} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
                   Email Address
                 </label>
                 <input
@@ -166,7 +166,7 @@ export default function VerifyEmail() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-600 bg-gray-800/50 text-white placeholder:text-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -190,7 +190,7 @@ export default function VerifyEmail() {
             <div className="text-center">
               <Link
                 to="/login"
-                className="text-sm text-blue-600 hover:underline"
+                className="text-sm text-blue-400 hover:text-blue-300 hover:underline"
               >
                 Back to Login
               </Link>
@@ -204,19 +204,19 @@ export default function VerifyEmail() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+        <Card className="shadow-2xl border border-gray-700/50 bg-gray-900/90 backdrop-blur-sm">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               Email Verification
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-gray-400">
               Verify your email address to activate your BIN account
             </CardDescription>
           </CardHeader>
