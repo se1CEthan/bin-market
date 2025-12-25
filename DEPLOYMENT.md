@@ -20,7 +20,7 @@ PAYPAL_CLIENT_SECRET=your-paypal-client-secret
 PLATFORM_PAYPAL_EMAIL=your-platform-paypal-email@domain.com
 
 # Application URLs
-FRONTEND_URL=https://your-domain.com
+FRONTEND_URL=https://www.braininspirednetwork.cloud
 
 # Server Configuration
 PORT=5000
@@ -32,7 +32,7 @@ NODE_ENV=production
 # Google OAuth (optional)
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_CALLBACK_URL=https://your-domain.com/api/auth/google/callback
+GOOGLE_CALLBACK_URL=https://www.braininspirednetwork.cloud/api/auth/google/callback
 
 # Email Service (optional - emails will be logged if not configured)
 EMAIL_SERVICE=gmail
@@ -57,7 +57,7 @@ npm run seed:categories
 1. Go to [PayPal Developer Dashboard](https://developer.paypal.com/)
 2. Create a new app
 3. Copy Client ID and Client Secret
-4. Set webhook URL: `https://your-domain.com/api/paypal/webhook`
+4. Set webhook URL: `https://www.braininspirednetwork.cloud/api/paypal/webhook`
 
 #### Environment Setup:
 ```bash

@@ -53,7 +53,7 @@ export default function Home() {
                 </h1>
                 
                 <p className="text-xl text-slate-600 dark:text-slate-300 leading-relaxed">
-                  The world's most trusted marketplace for automation software. 
+                  This is a well most trusted marketplace for automation software. 
                   <strong> Instant delivery</strong>, <strong>verified sellers</strong>, 
                   and <strong>90% revenue share</strong> for developers.
                 </p>
