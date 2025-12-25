@@ -48,7 +48,9 @@ function Router() {
             <Route path="/account" component={Account} />
             <Route path="/account/purchases" component={Account} />
             <Route path="/collections" component={BotCollections} />
-            <Route path="/compare" component={BotComparison} />
+            <Route path="/compare">
+              {() => <BotComparison />}
+            </Route>
             <Route path="/payment/success/:botId" component={PaymentSuccess} />
             <Route component={NotFound} />
           </Switch>
