@@ -164,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  // Enhanced PayPal routes
+  // Enhanced PayPal routes (Primary Payment Method)
   app.post("/api/paypal/create-order", requireAuth, async (req, res) => {
     try {
       const { botId, amount } = req.body;
