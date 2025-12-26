@@ -58,6 +58,14 @@ interface Bot {
 }
 
 const DeveloperDashboard: React.FC = () => {
+  // Safe formatter for numeric values coming from API (may be strings)
+  const fmt = (v: unknown, decimals = 2) => {
+    const n = typeof v === 'number' ? v : (v == null ? NaN : Number(v));
+    if (Number.isFinite(n)) return n.toFixed(decimals);
+    if (decimals === 0) return '0';
+    if (decimals === 1) return '0.0';
+    return '0.00';
+  };
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState('overview');
@@ -209,7 +217,7 @@ const DeveloperDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold">${stats?.totalRevenue?.toFixed(2) || '0.00'}</p>
+                  <p className="text-2xl font-bold">${fmt(stats?.totalRevenue, 2)}</p>
                 </div>
                 <DollarSign className="w-8 h-8 text-green-500" />
               </div>
@@ -245,7 +253,7 @@ const DeveloperDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Avg Rating</p>
-                  <p className="text-2xl font-bold">{stats?.averageRating?.toFixed(1) || '0.0'}</p>
+                  <p className="text-2xl font-bold">{fmt(stats?.averageRating, 1)}</p>
                 </div>
                 <Star className="w-8 h-8 text-yellow-500" />
               </div>
@@ -369,11 +377,11 @@ const DeveloperDashboard: React.FC = () => {
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Star className="w-4 h-4" />
-                                  {bot.rating.toFixed(1)} ({bot.reviews})
+                                  {fmt(bot.rating, 1)} ({bot.reviews})
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <TrendingUp className="w-4 h-4" />
-                                  ${bot.revenue.toFixed(2)}
+                                  ${fmt(bot.revenue, 2)}
                                 </span>
                               </div>
                             </div>
@@ -426,15 +434,15 @@ const DeveloperDashboard: React.FC = () => {
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span>Available Balance</span>
-                      <span className="font-bold text-green-600">${stats?.availableBalance?.toFixed(2) || '0.00'}</span>
+                      <span className="font-bold text-green-600">${fmt(stats?.availableBalance, 2)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Pending Payouts</span>
-                      <span className="font-bold text-yellow-600">${stats?.pendingPayouts?.toFixed(2) || '0.00'}</span>
+                      <span className="font-bold text-yellow-600">${fmt(stats?.pendingPayouts, 2)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Total Earned</span>
-                      <span className="font-bold">${stats?.totalRevenue?.toFixed(2) || '0.00'}</span>
+                      <span className="font-bold">${fmt(stats?.totalRevenue, 2)}</span>
                     </div>
                     <Button className="w-full mt-4">
                       <DollarSign className="w-4 h-4 mr-2" />
