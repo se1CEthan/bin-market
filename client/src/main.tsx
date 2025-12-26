@@ -26,21 +26,22 @@ class ErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         <div style={{ 
-          padding: '40px', 
-          textAlign: 'center', 
-          fontFamily: 'system-ui, sans-serif',
-          maxWidth: '800px',
-          margin: '0 auto',
-          backgroundColor: '#f9fafb',
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center'
-        }}>
-          <h1 style={{ color: '#dc2626', marginBottom: '20px', fontSize: '2rem' }}>
+              padding: '40px', 
+              textAlign: 'center', 
+              fontFamily: 'system-ui, sans-serif',
+              maxWidth: '800px',
+              margin: '0 auto',
+              background: 'hsl(var(--background) / 1)',
+              color: 'hsl(var(--foreground) / 1)',
+              minHeight: '100vh',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center'
+            }}>
+              <h1 style={{ color: 'hsl(var(--destructive) / 1)', marginBottom: '20px', fontSize: '2rem' }}>
             BIN Marketplace - Loading Error
           </h1>
-          <p style={{ marginBottom: '20px', color: '#6b7280', fontSize: '1.1rem' }}>
+              <p style={{ marginBottom: '20px', color: 'hsl(var(--muted-foreground) / 1)', fontSize: '1.1rem' }}>
             There was an error loading the application. Please try refreshing the page.
           </p>
           <div style={{ marginBottom: '30px' }}>
@@ -48,8 +49,8 @@ class ErrorBoundary extends React.Component<
               onClick={() => window.location.reload()} 
               style={{
                 padding: '12px 24px',
-                backgroundColor: '#3b82f6',
-                color: 'white',
+                    background: 'hsl(var(--primary) / 1)',
+                    color: 'hsl(var(--primary-foreground) / 1)',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',
@@ -64,8 +65,8 @@ class ErrorBoundary extends React.Component<
               onClick={() => window.location.href = '/'} 
               style={{
                 padding: '12px 24px',
-                backgroundColor: '#10b981',
-                color: 'white',
+                    background: 'hsl(var(--destructive) / 1)',
+                    color: 'hsl(var(--destructive-foreground) / 1)',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',
@@ -80,11 +81,11 @@ class ErrorBoundary extends React.Component<
             whiteSpace: 'pre-wrap', 
             textAlign: 'left', 
             marginTop: '20px',
-            padding: '20px',
-            backgroundColor: '#ffffff',
+                padding: '20px',
+                background: 'hsl(var(--card) / 1)',
             borderRadius: '8px',
-            border: '1px solid #d1d5db',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                border: '1px solid hsl(var(--card-border) / 1)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
           }}>
             <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '10px' }}>
               Technical Details (Click to expand)
@@ -110,7 +111,7 @@ function SimpleFallback() {
       flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#f8fafc',
+      background: 'hsl(var(--background) / 1)',
       fontFamily: 'system-ui, sans-serif',
       padding: '20px'
     }}>
@@ -118,23 +119,23 @@ function SimpleFallback() {
         <h1 style={{ 
           fontSize: '3rem', 
           fontWeight: 'bold', 
-          color: '#1e293b', 
+          color: 'hsl(var(--foreground) / 1)', 
           marginBottom: '1rem' 
         }}>
           BIN Marketplace
         </h1>
         <p style={{ 
           fontSize: '1.25rem', 
-          color: '#64748b', 
+          color: 'hsl(var(--muted-foreground) / 1)', 
           marginBottom: '2rem' 
         }}>
           Professional Automation Solutions
         </p>
         <div style={{
           padding: '20px',
-          backgroundColor: '#ffffff',
+          background: 'hsl(var(--card) / 1)',
           borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.06)',
           marginBottom: '2rem'
         }}>
           <p style={{ color: '#059669', fontWeight: '500', marginBottom: '10px' }}>
@@ -148,8 +149,8 @@ function SimpleFallback() {
           onClick={() => window.location.reload()}
           style={{
             padding: '12px 24px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
+            background: 'hsl(var(--primary) / 1)',
+            color: 'hsl(var(--primary-foreground) / 1)',
             border: 'none',
             borderRadius: '8px',
             cursor: 'pointer',
@@ -177,6 +178,14 @@ async function loadApp() {
 
 // Initialize the application
 const rootElement = document.getElementById("root");
+// Force dark theme by default for the entire site
+try {
+  if (typeof document !== 'undefined' && !document.documentElement.classList.contains('dark')) {
+    document.documentElement.classList.add('dark');
+  }
+} catch (e) {
+  // ignore in non-browser environments
+}
 if (!rootElement) {
   document.body.innerHTML = `
     <div style="padding: 40px; text-align: center; font-family: system-ui;">

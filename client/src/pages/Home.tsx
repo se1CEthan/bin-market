@@ -14,9 +14,10 @@ import {
   Shield, 
   DollarSign, 
   TrendingUp,
-  ArrowRight,
+  
   CheckCircle2
 } from 'lucide-react';
+import { ArrowRight } from '@/components/icons/ArrowRight';
 
 export default function Home() {
   const { user } = useAuth();

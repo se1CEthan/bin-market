@@ -15,10 +15,11 @@ import {
   Download, 
   Eye,
   Zap,
-  ArrowRight,
+  
   Flame,
   Crown
 } from 'lucide-react';
+import { ArrowRight } from '@/components/icons/ArrowRight';
 import { useTrendingBots } from '@/lib/live-data';
 import { AdvancedSpinner } from '@/components/ui/advanced-loading';
 import { cn } from '@/lib/utils';

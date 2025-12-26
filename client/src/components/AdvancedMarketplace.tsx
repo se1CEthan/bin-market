@@ -26,7 +26,7 @@ import {
   Users,
   Globe,
   Sparkles,
-  ArrowRight,
+  
   Grid3X3,
   List,
   BarChart3,
@@ -36,6 +36,7 @@ import {
   Target,
   Rocket
 } from 'lucide-react';
+import { ArrowRight } from '@/components/icons/ArrowRight';
 import { useLiveStats, useTrendingBots, useLiveActivity } from '@/lib/live-data';
 import { cn } from '@/lib/utils';
 
