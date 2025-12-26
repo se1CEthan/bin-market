@@ -20,6 +20,22 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
+    target: 'es2018',
+    minify: 'esbuild',
+    sourcemap: false,
+    brotliSize: false,
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('lucide-react')) return 'vendor_icons';
+            if (id.includes('framer-motion')) return 'vendor_motion';
+            return 'vendor';
+          }
+        }
+      }
+    }
   },
   server: {
     fs: {
