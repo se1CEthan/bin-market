@@ -29,9 +29,16 @@ interface PayPalOrder {
 export class PayPalService {
   // Get PayPal access token
   static async getAccessToken(): Promise<string> {
+    // Validate that credentials exist and provide a helpful error if not
+    if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
+      const msg = 'Missing PayPal credentials. Please set PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET in environment.';
+      console.error(msg);
+      throw new Error(msg);
+    }
+
     try {
       const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64');
-      
+
       const response = await fetch(`${PAYPAL_BASE_URL}/v1/oauth2/token`, {
         method: 'POST',
         headers: {
@@ -42,7 +49,10 @@ export class PayPalService {
       });
 
       if (!response.ok) {
-        throw new Error(`PayPal auth failed: ${response.statusText}`);
+        const text = await response.text().catch(() => response.statusText || 'unknown');
+        const errMsg = `PayPal auth failed: ${response.status} ${text}`;
+        console.error(errMsg);
+        throw new Error(errMsg);
       }
 
       const data: PayPalAccessToken = await response.json();
@@ -75,6 +85,19 @@ export class PayPalService {
 
       if (!buyer) {
         throw new Error('User not found');
+      }
+
+      // Basic validation for runtime configuration
+      if (!process.env.FRONTEND_URL) {
+        const msg = 'Missing FRONTEND_URL environment variable required for PayPal return/cancel URLs.';
+        console.error(msg);
+        throw new Error(msg);
+      }
+
+      if (typeof amount !== 'number' || !isFinite(amount) || amount < 0) {
+        const msg = `Invalid amount provided for PayPal order: ${amount}`;
+        console.error(msg);
+        throw new Error(msg);
       }
 
       const accessToken = await this.getAccessToken();

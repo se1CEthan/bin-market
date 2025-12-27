@@ -73,10 +73,11 @@ export default function BotDetail() {
         queryClient.invalidateQueries({ queryKey: ['/api/account/purchases'] });
       }
     },
-    onError: () => {
+    onError: (error: any) => {
+      const msg = error?.message || 'Unable to complete purchase. Please try again.';
       toast({
         title: 'Purchase Failed',
-        description: 'Unable to complete purchase. Please try again.',
+        description: msg,
         variant: 'destructive',
       });
     },

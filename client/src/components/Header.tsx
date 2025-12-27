@@ -392,7 +392,7 @@ export function Header() {
               >
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button variant="ghost" asChild data-testid="button-login" className="px-4 py-2 h-10 font-medium rounded-xl">
-                    <Link href="/login">Sign In</Link>
+                    <Link href="/login"></Link>
                   </Button>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>

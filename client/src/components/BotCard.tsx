@@ -285,8 +285,9 @@ export function BotCard({ bot }: BotCardProps) {
                           toast({ title: 'Purchase Successful', description: 'Your purchase completed.' });
                           queryClient.invalidateQueries({ queryKey: ['/api/account/purchases'] });
                         }
-                      } catch (err) {
-                        toast({ title: 'Purchase Failed', description: 'Unable to initiate purchase. Please try again.', variant: 'destructive' });
+                      } catch (err: any) {
+                        const msg = err?.message || 'Unable to initiate purchase. Please try again.';
+                        toast({ title: 'Purchase Failed', description: msg, variant: 'destructive' });
                       }
                     }}
                   >
