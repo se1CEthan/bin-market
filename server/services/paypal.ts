@@ -98,8 +98,9 @@ export class PayPalService {
           brand_name: 'BIN Marketplace',
           landing_page: 'NO_PREFERENCE',
           user_action: 'PAY_NOW',
-          return_url: `${process.env.FRONTEND_URL}/payment/success`,
-          cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
+          // Include botId in return/cancel URLs so frontend can map the order back to the bot
+          return_url: `${process.env.FRONTEND_URL}/payment/success/${botId}`,
+          cancel_url: `${process.env.FRONTEND_URL}/payment/cancel/${botId}`,
         },
       };
 

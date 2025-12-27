@@ -1070,15 +1070,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const platformFee = (amount * 0.10).toFixed(2);
       const developerEarnings = (amount * 0.90).toFixed(2);
 
-      // Create PayPal order
+      // Create PayPal order via internal PayPal service (includes botId in return URL)
       console.log('Creating PayPal order for bot:', bot.id, 'price:', bot.price);
-      const paypalResponse = await fetch(`${req.protocol}://${req.get('host')}/api/paypal/order`, {
+      const paypalResponse = await fetch(`${req.protocol}://${req.get('host')}/api/paypal/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: bot.price,
-          currency: 'USD',
-          intent: 'CAPTURE'
+          botId: bot.id,
+          amount: parseFloat(bot.price),
         })
       });
 
