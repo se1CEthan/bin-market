@@ -1022,7 +1022,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         price,
         categoryId,
         developerId: (req.user as any).id,
-        status: 'pending',
+        status: 'approved',
       };
 
       if (requirements) botData.requirements = requirements;
