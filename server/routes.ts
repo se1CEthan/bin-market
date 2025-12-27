@@ -1126,17 +1126,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paypalOrder = await PayPalService.createOrder(bot.id, (req.user as any).id, amount);
       console.log('PayPal order response (server-side):', paypalOrder && paypalOrder.id ? `id=${paypalOrder.id}` : JSON.stringify(paypalOrder).slice(0, 2000));
 
-      // Create transaction record
-      const transaction = await storage.createTransaction({
-        buyerId: (req.user as any).id,
-        botId: bot.id,
-        developerId: bot.developerId,
-        amount: amount.toString(),
-        platformFee,
-        developerEarnings,
-        status: 'pending',
-        paypalOrderId: paypalOrder.id,
-      });
+      // Create or reuse transaction record (PayPalService may have already created one)
+      let transaction = await storage.getTransactionByPaypalOrderId(paypalOrder.id);
+      if (!transaction) {
+        transaction = await storage.createTransaction({
+          buyerId: (req.user as any).id,
+          botId: bot.id,
+          developerId: bot.developerId,
+          amount: amount.toString(),
+          platformFee,
+          developerEarnings,
+          paymentMethod: 'paypal',
+          status: 'pending',
+          paypalOrderId: paypalOrder.id,
+        });
+      }
 
       res.json({ 
         success: true, 
