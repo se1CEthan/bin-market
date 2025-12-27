@@ -68,7 +68,8 @@ export class PayPalService {
     botId: string,
     buyerId: string,
     amount: number,
-    currency: string = 'USD'
+    currency: string = 'USD',
+    returnBaseUrl?: string,
   ): Promise<PayPalOrder> {
     try {
       const bot = await db.query.bots.findFirst({
@@ -87,9 +88,10 @@ export class PayPalService {
         throw new Error('User not found');
       }
 
-      // Basic validation for runtime configuration
-      if (!process.env.FRONTEND_URL) {
-        const msg = 'Missing FRONTEND_URL environment variable required for PayPal return/cancel URLs.';
+      // Determine base URL for return/cancel. Prefer explicit parameter, then env var.
+      const baseUrl = (returnBaseUrl && returnBaseUrl !== '') ? returnBaseUrl : process.env.FRONTEND_URL;
+      if (!baseUrl) {
+        const msg = 'Missing FRONTEND_URL environment variable required for PayPal return/cancel URLs (and no returnBaseUrl provided).';
         console.error(msg);
         throw new Error(msg);
       }
@@ -122,8 +124,8 @@ export class PayPalService {
           landing_page: 'NO_PREFERENCE',
           user_action: 'PAY_NOW',
           // Include botId in return/cancel URLs so frontend can map the order back to the bot
-          return_url: `${process.env.FRONTEND_URL}/payment/success/${botId}`,
-          cancel_url: `${process.env.FRONTEND_URL}/payment/cancel/${botId}`,
+          return_url: `${baseUrl}/payment/success/${botId}`,
+          cancel_url: `${baseUrl}/payment/cancel/${botId}`,
         },
       };
 

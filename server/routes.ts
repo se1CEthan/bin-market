@@ -174,10 +174,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Bot ID and amount are required" });
       }
 
+      // Use request origin as a fallback for return URLs when FRONTEND_URL is not configured
+      const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
       const order = await PayPalService.createOrder(
         botId,
         (req.user as any).id,
-        parseFloat(amount)
+        parseFloat(amount),
+        'USD',
+        origin,
       );
 
       res.json(order);
