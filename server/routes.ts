@@ -1069,9 +1069,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const amount = parseFloat(bot.price);
       console.log('Bot price raw value:', bot.price);
-      if (!isFinite(amount) || amount <= 0) {
+      // Allow free bots (0.00). Only reject NaN or negative prices.
+      if (!isFinite(amount) || amount < 0) {
         console.error(`Invalid bot price for bot ${bot.id}:`, bot.price);
-        return res.status(400).json({ error: 'Invalid bot price. Please set a valid price for this bot.' });
+        return res.status(400).json({ error: 'Invalid bot price. Please set a valid non-negative price for this bot.' });
       }
       const platformFee = (amount * 0.10).toFixed(2);
       const developerEarnings = (amount * 0.90).toFixed(2);
@@ -1116,26 +1117,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ success: true, transaction, license: licenseData });
       }
 
-      // Create PayPal order via internal PayPal service (includes botId in return URL)
-      console.log('Creating PayPal order for bot:', bot.id, 'price:', bot.price);
-      const paypalResponse = await fetch(`${req.protocol}://${req.get('host')}/api/paypal/create-order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          botId: bot.id,
-          amount: parseFloat(bot.price),
-        })
-      });
-
-      if (!paypalResponse.ok) {
-        const errorText = await paypalResponse.text();
-        console.error('PayPal order creation failed:', errorText);
-        throw new Error(`Failed to create PayPal order: ${errorText}`);
-      }
-
-      const paypalOrder = await paypalResponse.json();
-      console.log('PayPal order response:', JSON.stringify(paypalOrder).slice(0, 2000));
-      console.log('PayPal order created id:', paypalOrder?.id);
+      // Create PayPal order via internal PayPalService directly (avoid internal HTTP call requiring session cookies)
+      console.log('Creating PayPal order (server-side) for bot:', bot.id, 'price:', bot.price);
+      const paypalOrder = await PayPalService.createOrder(bot.id, (req.user as any).id, amount);
+      console.log('PayPal order response (server-side):', paypalOrder && paypalOrder.id ? `id=${paypalOrder.id}` : JSON.stringify(paypalOrder).slice(0, 2000));
 
       // Create transaction record
       const transaction = await storage.createTransaction({
