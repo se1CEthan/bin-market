@@ -19,7 +19,10 @@ declare module 'http' {
 }
 
 // Session configuration with PostgreSQL store
-app.set('trust proxy', 1); // Trust Render's proxy
+// Only trust proxy when running in production behind a reverse proxy
+if (isProd) {
+  app.set('trust proxy', 1); // Trust Render's proxy
+}
 
 const isProd = process.env.NODE_ENV === 'production';
 const frontendUrl = process.env.FRONTEND_URL || '';
@@ -45,7 +48,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
-  proxy: true, // Trust the reverse proxy
+  proxy: isProd, // Enable proxy handling only in production
   cookie: {
     secure: isProd, // secure cookies in production only
     httpOnly: true,
