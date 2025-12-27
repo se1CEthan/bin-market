@@ -7,6 +7,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Star, Download, Eye, ShoppingCart, Heart, Bookmark, Zap, TrendingUp, Crown, Sparkles, Tag } from 'lucide-react';
 import { cardHover, morphingCard, glowEffect, staggerItem } from '@/lib/animations';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import type { Bot } from '@shared/schema';
 
 interface BotCardProps {
@@ -25,6 +28,8 @@ export function BotCard({ bot }: BotCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -259,10 +264,30 @@ export function BotCard({ bot }: BotCardProps) {
                   <Button 
                     size="sm" 
                     className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      // Handle quick purchase
+                      if (!user) {
+                        toast({ title: 'Login Required', description: 'Please sign in to purchase bots.', variant: 'destructive' });
+                        return;
+                      }
+                      if (user.id === bot.developer?.id) {
+                        toast({ title: 'Invalid Action', description: 'You cannot purchase your own bot.', variant: 'destructive' });
+                        return;
+                      }
+
+                      try {
+                        const response = await apiRequest('POST', `/api/bots/${bot.id}/purchase`, {});
+                        const data = await response.json();
+                        if (data.approvalUrl) {
+                          window.location.href = data.approvalUrl;
+                        } else {
+                          toast({ title: 'Purchase Successful', description: 'Your purchase completed.' });
+                          queryClient.invalidateQueries({ queryKey: ['/api/account/purchases'] });
+                        }
+                      } catch (err) {
+                        toast({ title: 'Purchase Failed', description: 'Unable to initiate purchase. Please try again.', variant: 'destructive' });
+                      }
                     }}
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
