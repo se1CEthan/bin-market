@@ -9,6 +9,7 @@ import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./payp
 import { AuthService } from "./services/auth";
 import { PayPalService } from "./services/paypal";
 import { LicenseService } from "./services/license";
+import { sendPurchaseConfirmation } from "./services/email";
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -1067,8 +1068,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const amount = parseFloat(bot.price);
+      console.log('Bot price raw value:', bot.price);
+      if (!isFinite(amount) || amount <= 0) {
+        console.error(`Invalid bot price for bot ${bot.id}:`, bot.price);
+        return res.status(400).json({ error: 'Invalid bot price. Please set a valid price for this bot.' });
+      }
       const platformFee = (amount * 0.10).toFixed(2);
       const developerEarnings = (amount * 0.90).toFixed(2);
+
+      // If the bot is free (price 0), complete the purchase immediately without PayPal
+      if (amount === 0) {
+        const transaction = await storage.createTransaction({
+          buyerId: (req.user as any).id,
+          botId: bot.id,
+          developerId: bot.developerId,
+          amount: '0.00',
+          platformFee: '0.00',
+          developerEarnings: '0.00',
+          paymentMethod: 'free',
+          paypalOrderId: null,
+          status: 'completed',
+        });
+
+        // Generate license and increment download count
+        const licenseData = await LicenseService.generateLicense(transaction.id, bot.id, (req.user as any).id);
+        await storage.incrementBotDownloads(bot.id);
+
+        // Send confirmation email if user has email
+        try {
+          const buyer = await storage.getUser((req.user as any).id);
+          if (buyer?.email) {
+            await sendPurchaseConfirmation(
+              buyer.email,
+              buyer.name,
+              bot.title,
+              transaction.id,
+              transaction.amount,
+              licenseData.licenseKey,
+              licenseData.downloadUrl,
+              licenseData.maxDownloads
+            );
+          }
+        } catch (emailErr) {
+          console.error('Failed to send purchase confirmation email for free purchase:', emailErr);
+        }
+
+        return res.json({ success: true, transaction, license: licenseData });
+      }
 
       // Create PayPal order via internal PayPal service (includes botId in return URL)
       console.log('Creating PayPal order for bot:', bot.id, 'price:', bot.price);
@@ -1088,7 +1134,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const paypalOrder = await paypalResponse.json();
-      console.log('PayPal order created:', paypalOrder.id);
+      console.log('PayPal order response:', JSON.stringify(paypalOrder).slice(0, 2000));
+      console.log('PayPal order created id:', paypalOrder?.id);
 
       // Create transaction record
       const transaction = await storage.createTransaction({
@@ -1108,9 +1155,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         approvalUrl: paypalOrder.links.find((link: any) => link.rel === 'approve')?.href,
         transaction 
       });
-    } catch (error) {
-      console.error('Purchase error:', error);
-      res.status(500).json({ error: "Failed to initiate purchase" });
+    } catch (error: any) {
+      console.error('Purchase error:', error?.message || error);
+      if (error?.stack) console.error(error.stack);
+      try {
+        // attempt to return meaningful message to client if available
+        res.status(500).json({ error: error?.message || 'Failed to initiate purchase', details: (error && error.toString()) });
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to initiate purchase' });
+      }
     }
   });
 

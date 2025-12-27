@@ -36,7 +36,10 @@ import type { Category } from '@shared/schema';
 const botSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters'),
   description: z.string().min(20, 'Description must be at least 20 characters'),
-  price: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Invalid price format'),
+  price: z.string().min(1, 'Price is required').refine((val) => {
+    const n = parseFloat(val);
+    return !isNaN(n) && isFinite(n) && n >= 0;
+  }, 'Invalid price format'),
   categoryId: z.string().min(1, 'Please select a category'),
   requirements: z.string().optional(),
   supportedOS: z.array(z.string()).min(1, 'Select at least one OS'),
