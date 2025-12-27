@@ -25,7 +25,7 @@ export default function DeveloperSignup() {
       await queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
       await queryClient.refetchQueries({ queryKey: ['/api/auth/me'] });
       setTimeout(() => {
-        navigate('/developer/dashboard');
+        navigate('/developer/upload');
       }, 500);
     },
     onError: () => {

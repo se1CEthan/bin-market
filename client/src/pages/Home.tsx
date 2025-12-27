@@ -67,7 +67,7 @@ export default function Home() {
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
-                <Link href="/developer/signup">
+                <Link href={user?.isDeveloper ? "/developer/upload" : "/developer/signup"}>
                   <Button size="lg" variant="outline" className="px-8 py-4 text-lg">
                     Start Selling
                     <DollarSign className="w-5 h-5 ml-2" />
