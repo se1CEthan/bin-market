@@ -21,6 +21,21 @@ declare module 'http' {
 // Session configuration with PostgreSQL store
 app.set('trust proxy', 1); // Trust Render's proxy
 
+const isProd = process.env.NODE_ENV === 'production';
+const frontendUrl = process.env.FRONTEND_URL || '';
+let cookieDomain: string | undefined = undefined;
+try {
+  if (isProd && frontendUrl) {
+    const url = new URL(frontendUrl);
+    // Use root domain for cookie (strip www)
+    cookieDomain = url.hostname.startsWith('www.') ? `.${url.hostname.replace(/^www\./, '')}` : url.hostname;
+  }
+} catch (err) {
+  // ignore
+}
+
+console.log('Session cookie config:', { isProd, cookieDomain, frontendUrl });
+
 app.use(session({
   store: new PgSession({
     pool: pool,
@@ -32,11 +47,11 @@ app.use(session({
   saveUninitialized: false,
   proxy: true, // Trust the reverse proxy
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // Secure only in production
+    secure: isProd, // secure cookies in production only
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for production, 'lax' for dev
-    domain: process.env.NODE_ENV === 'production' ? '.braininspirednetwork.cloud' : undefined,
+    sameSite: isProd ? 'none' : 'lax', // 'none' for production, 'lax' for dev
+    domain: cookieDomain,
   },
 }));
 
@@ -82,6 +97,20 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+
+  // Debug endpoint to inspect session and cookies (safe for local testing only)
+  app.get('/api/debug/session', (req, res) => {
+    try {
+      res.json({
+        sessionID: req.sessionID,
+        cookies: req.headers.cookie || null,
+        sessionCookie: req.session?.cookie || null,
+        user: req.user || null,
+      });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to read session' });
+    }
+  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
