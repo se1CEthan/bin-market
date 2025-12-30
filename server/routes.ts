@@ -1113,6 +1113,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/developer/payouts/:id/retry', requireDeveloper, async (req, res) => {
+    try {
+      const payoutId = req.params.id;
+      // Verify payout belongs to developer
+      const payouts = await storage.getPayoutRequestsByDeveloper((req.user as any).id);
+      const payout = payouts.find(p => p.id === payoutId);
+      if (!payout) return res.status(404).json({ error: 'Payout request not found' });
+
+      if (payout.status === 'paid') return res.status(400).json({ error: 'Payout already paid' });
+
+      const { processPayoutRequest } = await import('./paypal-payout');
+      const result = await processPayoutRequest(payoutId);
+      if (result.success) return res.json({ success: true });
+      return res.status(500).json({ error: result.error || 'Failed to process payout' });
+    } catch (err) {
+      console.error('Retry payout error:', err);
+      res.status(500).json({ error: 'Failed to retry payout' });
+    }
+  });
+
+  // Developer can request manual payout (withdraw available balance)
+  app.post('/api/developer/payouts/request', requireDeveloper, async (req, res) => {
+    try {
+      const developerId = (req.user as any).id;
+      const { amount, paypalEmail, notes } = req.body;
+      if (!amount || isNaN(parseFloat(amount))) return res.status(400).json({ error: 'Invalid amount' });
+
+      const user = await storage.getUser(developerId);
+      const emailToUse = paypalEmail || user?.paypalEmail;
+      if (!emailToUse) return res.status(400).json({ error: 'No PayPal email configured' });
+
+      const payout = await storage.createPayoutRequest({
+        developerId,
+        amount: parseFloat(amount).toFixed(2) as any,
+        paypalEmail: emailToUse,
+        notes: notes || 'Developer requested payout',
+        status: 'pending',
+      });
+
+      res.json({ success: true, payout });
+    } catch (err) {
+      console.error('Create payout request error:', err);
+      res.status(500).json({ error: 'Failed to create payout request' });
+    }
+  });
+
   app.post("/api/bots/upload", requireDeveloper, upload.fields([
     { name: 'botFile', maxCount: 1 },
     { name: 'thumbnail', maxCount: 1 },

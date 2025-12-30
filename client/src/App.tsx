@@ -47,6 +47,7 @@ function Router() {
               <Route path="/bots" component={BotListing} />
               <Route path="/bot/:id" component={BotDetail} />
               <Route path="/developer/dashboard" component={DeveloperDashboard} />
+              <Route path="/developer/dashboardinteractive" component={DeveloperDashboard} />
               <Route path="/developer/upload" component={UploadBot} />
               <Route path="/developer/signup" component={DeveloperSignup} />
               <Route path="/developer/paypal/callback" component={DeveloperPayPalCallback} />

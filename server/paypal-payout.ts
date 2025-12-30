@@ -1,4 +1,4 @@
-const PLATFORM_PAYPAL_EMAIL = process.env.PLATFORM_PAYPAL_EMAIL || "platform@braininspirednetwork.cloud";
+const PLATFORM_PAYPAL_EMAIL = process.env.PLATFORM_PAYPAL_EMAIL || "xselle34@gmail.com";
 
 import { storage } from './storage';
 
@@ -181,4 +181,77 @@ export async function processPendingPayouts(): Promise<{ processed: number; erro
   }
 
   return { processed, errors };
+}
+
+/**
+ * Process a single payout request by id (used for manual retry by developer)
+ */
+export async function processPayoutRequest(payoutId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const pending = await storage.getPendingPayouts();
+    const p = pending.find((r) => r.id === payoutId);
+    if (!p) return { success: false, error: 'Payout request not found or not pending' };
+
+    const developerAmount = parseFloat(p.amount as any).toFixed(2);
+    const platformAmountFloat = parseFloat((parseFloat(developerAmount) / 0.9 * 0.1).toFixed(2));
+    const platformAmount = platformAmountFloat.toFixed(2);
+
+    const payoutBatch = {
+      sender_batch_header: {
+        sender_batch_id: `payout_retry_${payoutId}_${Date.now()}`,
+        email_subject: "You received a payment from BIN Marketplace",
+        email_message: `Retry payout for request ${payoutId}`,
+      },
+      items: [
+        {
+          recipient_type: 'EMAIL',
+          amount: { value: developerAmount, currency: 'USD' },
+          receiver: p.paypalEmail,
+          note: `Retry payout for ${p.notes || ''}`,
+          sender_item_id: `${payoutId}_dev`,
+        },
+        {
+          recipient_type: 'EMAIL',
+          amount: { value: platformAmount, currency: 'USD' },
+          receiver: PLATFORM_PAYPAL_EMAIL,
+          note: `Platform commission for payout ${payoutId}`,
+          sender_item_id: `${payoutId}_platform`,
+        },
+      ],
+    };
+
+    const response = await fetch(
+      `https://api-m.${process.env.NODE_ENV === 'production' ? '' : 'sandbox.'}paypal.com/v1/payments/payouts`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await getAccessToken()}`,
+        },
+        body: JSON.stringify(payoutBatch),
+      }
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => '');
+      await storage.updatePayoutRequest(p.id, {
+        status: 'failed',
+        notes: JSON.stringify({ ...JSON.parse(p.notes || '{}'), error: errorBody }),
+        processedAt: new Date(),
+      });
+      return { success: false, error: errorBody || 'Failed to send payout' };
+    }
+
+    const result = await response.json();
+    await storage.updatePayoutRequest(p.id, {
+      status: 'paid',
+      notes: JSON.stringify({ ...JSON.parse(p.notes || '{}'), payoutBatch: result.batch_header }),
+      processedAt: new Date(),
+    });
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('processPayoutRequest error:', err);
+    return { success: false, error: err?.message || 'Unknown error' };
+  }
 }

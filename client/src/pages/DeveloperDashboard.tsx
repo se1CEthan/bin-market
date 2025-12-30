@@ -28,6 +28,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { PayPalSettings } from '@/components/PayPalSettings';
 
 interface DeveloperStats {
   totalBots: number;
@@ -79,6 +80,32 @@ const DeveloperDashboard: React.FC = () => {
       });
       if (!response.ok) throw new Error('Failed to fetch stats');
       return response.json();
+    }
+  });
+
+  // Fetch payout history
+  const { data: payouts, isLoading: payoutsLoading, refetch: refetchPayouts } = useQuery({
+    queryKey: ['developer-payouts'],
+    queryFn: async () => {
+      const res = await fetch('/api/developer/payouts', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch payouts');
+      return res.json();
+    }
+  });
+
+  const retryPayoutMutation = useMutation({
+    mutationFn: async (payoutId: string) => {
+      const res = await fetch(`/api/developer/payouts/${payoutId}/retry`, { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to retry payout');
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Payout retried — check status shortly');
+      refetchPayouts();
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || 'Retry failed');
     }
   });
 
@@ -416,9 +443,23 @@ const DeveloperDashboard: React.FC = () => {
                   <CardDescription>Track your bot performance</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Analytics dashboard coming soon</p>
+                  <div className="space-y-4">
+                    <div className="grid md:grid-cols-3 gap-4">
+                      {bots?.map((b) => (
+                        <Button key={b.id} variant={"outline"} onClick={async () => {
+                          try {
+                            const res = await fetch(`/api/developer/analytics/${b.id}`, { credentials: 'include' });
+                            if (!res.ok) throw new Error('Failed to load analytics');
+                            const data = await res.json();
+                            // display simple modal or toast with summary
+                            toast.success(`Views: ${data.views}, Downloads: ${data.downloads}, Revenue: $${data.revenue}`);
+                          } catch (err: any) {
+                            toast.error(err?.message || 'Analytics load failed');
+                          }
+                        }}>{b.name}</Button>
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Click a bot to view its analytics summary.</p>
                   </div>
                 </CardContent>
               </Card>
@@ -444,10 +485,7 @@ const DeveloperDashboard: React.FC = () => {
                       <span>Total Earned</span>
                       <span className="font-bold">${fmt(stats?.totalRevenue, 2)}</span>
                     </div>
-                    <Button className="w-full mt-4">
-                      <DollarSign className="w-4 h-4 mr-2" />
-                      Request Payout
-                    </Button>
+                    <RequestPayoutButton />
                   </CardContent>
                 </Card>
 
@@ -458,18 +496,46 @@ const DeveloperDashboard: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium">PayPal Email</label>
-                        <p className="text-sm text-muted-foreground">{user?.paypalEmail || 'Not configured'}</p>
-                      </div>
-                      <Button variant="outline" className="w-full">
-                        <Settings className="w-4 h-4 mr-2" />
-                        Update Payment Settings
-                      </Button>
+                      <PayPalSettings />
                     </div>
                   </CardContent>
                 </Card>
               </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Payout History</CardTitle>
+                  <CardDescription>Recent automatic payouts and their status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {payoutsLoading ? (
+                    <div className="text-center py-8">Loading payouts...</div>
+                  ) : !payouts || payouts.length === 0 ? (
+                    <div className="text-center py-8 text-sm text-muted-foreground">No payouts yet</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {payouts.map((p: any) => (
+                        <div key={p.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div>
+                            <div className="text-sm font-medium">${Number(p.amount).toFixed(2)}</div>
+                            <div className="text-xs text-muted-foreground">{new Date(p.createdAt).toLocaleString()}</div>
+                          </div>
+                          <div className="text-sm text-muted-foreground">{p.paypalEmail}</div>
+                          <div className="flex items-center gap-3">
+                            <div className={`px-2 py-1 rounded text-xs ${p.status === 'paid' ? 'bg-green-100 text-green-800' : p.status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                              {p.status}
+                            </div>
+                            {(p.status === 'failed' || p.status === 'pending') && (
+                              <Button size="sm" onClick={() => retryPayoutMutation.mutate(p.id)} disabled={retryPayoutMutation.isLoading}>
+                                Retry
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </motion.div>
@@ -489,10 +555,27 @@ const BotUploadForm: React.FC = () => {
     file: null as File | null
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle bot upload
-    toast.success('Bot uploaded successfully!');
+    try {
+      const fd = new FormData();
+      fd.append('title', formData.name);
+      fd.append('description', formData.description);
+      fd.append('price', formData.price || '0');
+      fd.append('categoryId', formData.category || '');
+      if (formData.file) fd.append('botFile', formData.file);
+
+      const res = await fetch('/api/bots/upload', {
+        method: 'POST',
+        credentials: 'include',
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      toast.success('Bot uploaded successfully!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Upload failed');
+    }
   };
 
   return (
@@ -596,6 +679,44 @@ const BotUploadForm: React.FC = () => {
         </form>
       </CardContent>
     </Card>
+  );
+};
+
+const RequestPayoutButton: React.FC = () => {
+  const queryClient = useQueryClient();
+  const { data: stats } = useQuery({ queryKey: ['developer-stats'], queryFn: async () => { const res = await fetch('/api/developer/stats', { credentials: 'include' }); return res.json(); } });
+  const mutation = useMutation({
+    mutationFn: async (amount: string) => {
+      const res = await fetch('/api/developer/payouts/request', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to request payout');
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Payout requested');
+      queryClient.invalidateQueries({ queryKey: ['developer-payouts'] });
+      queryClient.invalidateQueries({ queryKey: ['developer-stats'] });
+    },
+    onError: (err: any) => toast.error(err?.message || 'Payout request failed')
+  });
+
+  const handleRequest = () => {
+    const suggested = stats?.availableBalance || '0.00';
+    const amount = window.prompt('Enter payout amount', suggested);
+    if (!amount) return;
+    mutation.mutate(amount);
+  };
+
+  return (
+    <Button className="w-full mt-4" onClick={handleRequest} disabled={mutation.isLoading}>
+      <DollarSign className="w-4 h-4 mr-2" />
+      {mutation.isLoading ? 'Requesting...' : 'Request Payout'}
+    </Button>
   );
 };
 
