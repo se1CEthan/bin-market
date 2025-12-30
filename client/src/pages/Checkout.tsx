@@ -29,36 +29,91 @@ function CheckoutForm({ bot }: { bot: Bot }) {
     setError('');
 
     try {
-      const response = await fetch('/api/paypal/create-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          botId: bot.id,
-          amount: parseFloat(bot.price),
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        // Redirect to PayPal
-        const approvalUrl = data.links?.find((link: any) => link.rel === 'approve')?.href;
-        if (approvalUrl) {
-          window.location.href = approvalUrl;
-        } else {
-          setError('Failed to get PayPal approval URL');
-        }
-      } else {
-        setError(data.error || 'Failed to create PayPal order');
-      }
+      // This function is no longer used when PayPal Buttons are rendered.
+      // Keep as fallback but inform user.
+      setError('Use the PayPal button below to complete payment (cards supported).');
     } catch (error) {
       setError('Failed to initialize PayPal payment');
     } finally {
       setIsProcessing(false);
     }
   };
+
+  // Load PayPal SDK and render buttons (with card funding enabled)
+  useEffect(() => {
+    let mounted = true;
+
+    async function setupPayPal() {
+      try {
+        const cfgResp = await fetch('/api/paypal/config');
+        const cfg = await cfgResp.json();
+        const clientId = cfg.clientId;
+        if (!clientId) return;
+
+        // Inject PayPal script
+        const scriptId = 'paypal-sdk';
+        if (document.getElementById(scriptId)) {
+          // already loaded
+        } else {
+          const s = document.createElement('script');
+          s.id = scriptId;
+          s.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=buttons&enable-funding=card&intent=capture&currency=USD`;
+          s.async = true;
+          document.body.appendChild(s);
+          await new Promise((resolve) => { s.onload = resolve; s.onerror = resolve; });
+        }
+
+        // Render buttons
+        // @ts-ignore - global paypal
+        if ((window as any).paypal && mounted) {
+          // Clear container
+          const container = document.getElementById('paypal-button-container');
+          if (!container) return;
+          container.innerHTML = '';
+
+          (window as any).paypal.Buttons({
+            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' },
+            createOrder: async () => {
+              // Use existing server purchase endpoint which creates transaction and PayPal order
+              const resp = await fetch(`/api/bots/${bot.id}/purchase`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+              });
+              const data = await resp.json();
+              if (!resp.ok) throw new Error(data.error || 'Failed to create order');
+              return data.paypalOrderId || data.transaction?.paypalOrderId;
+            },
+            onApprove: async (data: any, actions: any) => {
+              try {
+                // Call server capture endpoint which also handles payout and post-purchase flow
+                const captureResp = await fetch(`/api/bots/${bot.id}/capture/${data.orderID}`, {
+                  method: 'POST',
+                  credentials: 'include',
+                });
+                const captureData = await captureResp.json();
+                if (!captureResp.ok) throw new Error(captureData.error || 'Capture failed');
+                // success — refresh page or redirect to purchases
+                window.location.href = '/account/purchases';
+              } catch (err: any) {
+                setError(err.message || 'Payment capture failed');
+              }
+            },
+            onError: (err: any) => {
+              console.error('PayPal Buttons error:', err);
+              setError('Payment failed. Please try another method.');
+            }
+          }).render('#paypal-button-container');
+        }
+      } catch (err) {
+        console.error('PayPal setup error:', err);
+      }
+    }
+
+    setupPayPal();
+
+    return () => { mounted = false; };
+  }, [bot]);
 
   if (success) {
     return (
@@ -88,33 +143,7 @@ function CheckoutForm({ bot }: { bot: Bot }) {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Secure Payment with PayPal</h3>
         
-        <div className="flex justify-center">
-          <div className="p-6 border-2 border-blue-200 rounded-lg bg-blue-50">
-            <svg className="w-16 h-16 mx-auto mb-4 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.26-.93 4.778-4.005 6.413-7.97 6.413h-1.97c-.226 0-.417.164-.452.386l-.85 5.39-.24 1.533c-.032.205.114.386.32.386h2.29c.458 0 .848-.334.922-.788l.038-.24.73-4.63.047-.26c.074-.453.463-.788.922-.788h.58c3.76 0 6.705-1.528 7.56-5.95.357-1.85.174-3.4-.755-4.53-.233-.283-.5-.52-.795-.715z"/>
-            </svg>
-            <p className="text-center text-blue-800 font-medium">PayPal</p>
-          </div>
-        </div>
-
-        <p className="text-sm text-gray-600 text-center">
-          You'll be redirected to PayPal to complete your payment securely.
-        </p>
-        
-        <Button
-          onClick={handlePayPalPayment}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-3"
-          disabled={isProcessing}
-        >
-          {isProcessing ? (
-            <div className="flex items-center space-x-2">
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Redirecting to PayPal...</span>
-            </div>
-          ) : (
-            `Pay $${bot.price} with PayPal`
-          )}
-        </Button>
+        <div id="paypal-button-container" className="flex justify-center" />
       </div>
 
       {/* Security Notice */}

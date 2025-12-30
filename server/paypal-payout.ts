@@ -1,21 +1,28 @@
 const PLATFORM_PAYPAL_EMAIL = process.env.PLATFORM_PAYPAL_EMAIL || "platform@braininspirednetwork.cloud";
 
+import { storage } from './storage';
+
 /**
  * Send automatic payout to developer (90%) after a sale
  * Platform keeps 10% automatically
  */
 export async function sendAutomaticPayout(
+  developerId: string,
   developerPaypalEmail: string,
   amount: number,
   botTitle: string,
   transactionId: string
 ): Promise<{ success: boolean; payoutId?: string; error?: string }> {
   try {
-    
-    // Calculate 90% for developer
-    const developerAmount = (amount * 0.90).toFixed(2);
-    
-    // Create payout batch
+    // Calculate split amounts (90% developer, 10% platform)
+    const developerAmountFloat = parseFloat((amount * 0.9).toFixed(2));
+    // Ensure platform receives the remainder to account for rounding
+    const platformAmountFloat = parseFloat((amount - developerAmountFloat).toFixed(2));
+
+    const developerAmount = developerAmountFloat.toFixed(2);
+    const platformAmount = platformAmountFloat.toFixed(2);
+
+    // Create payout batch with two items: developer (90%) and platform (10%)
     const payoutBatch = {
       sender_batch_header: {
         sender_batch_id: `payout_${transactionId}_${Date.now()}`,
@@ -31,10 +38,29 @@ export async function sendAutomaticPayout(
           },
           receiver: developerPaypalEmail,
           note: `Bot sale: ${botTitle} - Developer earnings (90%)`,
-          sender_item_id: transactionId,
+          sender_item_id: `${transactionId}_dev`,
+        },
+        {
+          recipient_type: "EMAIL",
+          amount: {
+            value: platformAmount,
+            currency: "USD",
+          },
+          receiver: PLATFORM_PAYPAL_EMAIL,
+          note: `Bot sale: ${botTitle} - Platform commission (10%)`,
+          sender_item_id: `${transactionId}_platform`,
         },
       ],
     };
+
+    // Create a DB payout request record (pending)
+    const pendingRecord = await storage.createPayoutRequest({
+      developerId,
+      amount: developerAmount,
+      paypalEmail: developerPaypalEmail,
+      notes: JSON.stringify({ botTitle, transactionId, type: 'automatic' }),
+      status: 'pending',
+    });
 
     // Send payout using PayPal Payouts API
     const response = await fetch(
@@ -50,16 +76,30 @@ export async function sendAutomaticPayout(
     );
 
     if (!response.ok) {
-      const error = await response.json();
-      console.error('PayPal payout error:', error);
+      const errorBody = await response.text().catch(() => '');
+      console.error('PayPal payout error:', errorBody);
+      // Update DB record to failed
+      await storage.updatePayoutRequest(pendingRecord.id, {
+        status: 'failed',
+        notes: JSON.stringify({ ...JSON.parse(pendingRecord.notes || '{}'), error: errorBody }),
+        processedAt: new Date(),
+      });
+
       return {
         success: false,
-        error: error.message || 'Failed to send payout',
+        error: errorBody || 'Failed to send payout',
       };
     }
 
     const result = await response.json();
     console.log('Payout sent successfully:', result);
+
+    // Mark DB record as paid and attach payout_batch_id
+    await storage.updatePayoutRequest(pendingRecord.id, {
+      status: 'paid',
+      notes: JSON.stringify({ ...JSON.parse(pendingRecord.notes || '{}'), payoutBatch: result.batch_header }),
+      processedAt: new Date(),
+    });
 
     return {
       success: true,
@@ -116,4 +156,29 @@ export async function verifyPayPalEmail(email: string): Promise<boolean> {
     console.error('PayPal email verification error:', error);
     return false;
   }
+}
+
+/**
+ * Process pending payout requests (simple retry worker).
+ * Attempts to send payouts for any `pending` payoutRequests in DB.
+ */
+export async function processPendingPayouts(): Promise<{ processed: number; errors: number }> {
+  const pending = await storage.getPendingPayouts();
+  let processed = 0;
+  let errors = 0;
+
+  for (const p of pending) {
+    try {
+      const amount = parseFloat(p.amount as any);
+      // p.developerId and p.paypalEmail exist
+      const result = await sendAutomaticPayout(p.developerId, p.paypalEmail, amount, `Retry for payout ${p.id}`, p.id);
+      if (result.success) processed++;
+      else errors++;
+    } catch (err) {
+      console.error('Retry payout error for', p.id, err);
+      errors++;
+    }
+  }
+
+  return { processed, errors };
 }

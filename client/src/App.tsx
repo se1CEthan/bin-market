@@ -24,6 +24,7 @@ const BotDetail = lazy(() => import("@/pages/BotDetail"));
 const DeveloperDashboard = lazy(() => import("@/pages/DeveloperDashboard"));
 const UploadBot = lazy(() => import("@/pages/UploadBot"));
 const DeveloperSignup = lazy(() => import("@/pages/DeveloperSignup"));
+const DeveloperPayPalCallback = lazy(() => import("@/pages/DeveloperPayPalCallback"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const Account = lazy(() => import("@/pages/Account"));
 const PaymentSuccess = lazy(() => import("@/pages/PaymentSuccess"));
@@ -48,6 +49,7 @@ function Router() {
               <Route path="/developer/dashboard" component={DeveloperDashboard} />
               <Route path="/developer/upload" component={UploadBot} />
               <Route path="/developer/signup" component={DeveloperSignup} />
+              <Route path="/developer/paypal/callback" component={DeveloperPayPalCallback} />
               <Route path="/admin/dashboard" component={AdminDashboard} />
               <Route path="/account" component={Account} />
               <Route path="/account/purchases" component={Account} />

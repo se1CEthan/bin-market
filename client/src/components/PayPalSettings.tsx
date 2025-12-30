@@ -71,6 +71,18 @@ export function PayPalSettings() {
     updateMutation.mutate({ paypalEmail, paypalEnabled });
   };
 
+  const handleConnect = async () => {
+    try {
+      const resp = await fetch('/api/developer/paypal/connect', { credentials: 'include' });
+      if (!resp.ok) throw new Error('Failed to create connect URL');
+      const data = await resp.json();
+      // Redirect developer to PayPal to sign in
+      window.location.href = data.url;
+    } catch (err) {
+      toast({ title: 'Error', description: (err as Error).message, variant: 'destructive' });
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -192,6 +204,10 @@ export function PayPalSettings() {
             ) : (
               'Save PayPal Settings'
             )}
+          </Button>
+
+          <Button variant="secondary" className="w-full mt-2" onClick={handleConnect}>
+            Connect with PayPal
           </Button>
         </form>
       </CardContent>

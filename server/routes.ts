@@ -30,6 +30,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/paypal/order", createPaypalOrder);
   app.post("/api/paypal/order/:orderID/capture", capturePaypalOrder);
 
+  // Public PayPal config (client id + env) for client-side SDK loading
+  app.get('/api/paypal/config', async (req, res) => {
+    try {
+      const clientId = process.env.PAYPAL_CLIENT_ID || null;
+      const env = process.env.NODE_ENV === 'production' ? 'production' : 'sandbox';
+      res.json({ clientId, env });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to load PayPal config' });
+    }
+  });
+
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -942,6 +953,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create PayPal OAuth connect URL for developer to sign in via PayPal
+  app.get('/api/developer/paypal/connect', requireDeveloper, async (req, res) => {
+    try {
+      const clientId = process.env.PAYPAL_CLIENT_ID;
+      if (!clientId) return res.status(500).json({ error: 'PayPal client not configured' });
+
+      const isProd = process.env.NODE_ENV === 'production';
+      const base = isProd ? 'https://www.paypal.com' : 'https://www.sandbox.paypal.com';
+
+      // Redirect URI should point to a client-side callback that will exchange the code
+      const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+      const redirectUri = `${appUrl}/developer/paypal/callback`;
+
+      const scope = encodeURIComponent('openid email');
+      const url = `${base}/signin/authorize?client_id=${clientId}&response_type=code&scope=${scope}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+      res.json({ url });
+    } catch (error) {
+      console.error('PayPal connect error:', error);
+      res.status(500).json({ error: 'Failed to create PayPal connect URL' });
+    }
+  });
+
+  // Exchange PayPal authorization code (sent from client callback) and link developer PayPal account
+  app.post('/api/developer/paypal/exchange', requireDeveloper, async (req, res) => {
+    try {
+      const { code } = req.body;
+      if (!code) return res.status(400).json({ error: 'Authorization code is required' });
+
+      const clientId = process.env.PAYPAL_CLIENT_ID;
+      const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+      if (!clientId || !clientSecret) return res.status(500).json({ error: 'PayPal credentials not configured' });
+
+      const isProd = process.env.NODE_ENV === 'production';
+      const apiBase = isProd ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+
+      const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+      const redirectUri = `${appUrl}/developer/paypal/callback`;
+
+      // Exchange code for access token
+      const tokenResp = await fetch(`${apiBase}/v1/identity/openidconnect/tokenservice`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: redirectUri }),
+      });
+
+      if (!tokenResp.ok) {
+        const err = await tokenResp.text();
+        console.error('PayPal token exchange failed:', err);
+        return res.status(500).json({ error: 'Failed to exchange authorization code' });
+      }
+
+      const tokenData = await tokenResp.json();
+      const accessToken = tokenData.access_token;
+      if (!accessToken) return res.status(500).json({ error: 'No access token from PayPal' });
+
+      // Fetch user info
+      const userInfoResp = await fetch(`${apiBase}/v1/identity/openidconnect/userinfo/?schema=openid`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!userInfoResp.ok) {
+        const err = await userInfoResp.text();
+        console.error('PayPal userinfo failed:', err);
+        return res.status(500).json({ error: 'Failed to fetch PayPal user info' });
+      }
+
+      const userInfo = await userInfoResp.json();
+      const email = userInfo.email;
+      const emailVerified = userInfo.email_verified;
+
+      if (!email || !emailVerified) {
+        return res.status(400).json({ error: 'PayPal account email not verified' });
+      }
+
+      // Save to user record
+      const user = await storage.updateUser((req.user as any).id, {
+        paypalEmail: email,
+        paypalEnabled: true,
+      });
+
+      res.json({ success: true, paypalEmail: user?.paypalEmail });
+    } catch (error) {
+      console.error('PayPal exchange error:', error);
+      res.status(500).json({ error: 'Failed to link PayPal account' });
+    }
+  });
+
   app.get("/api/developer/stats", requireDeveloper, async (req, res) => {
     try {
       const stats = await storage.getDeveloperStats((req.user as any).id);
@@ -1195,6 +1297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const amount = parseFloat(transaction.amount);
               
               const payoutResult = await sendAutomaticPayout(
+                developer.id,
                 developer.paypalEmail,
                 amount,
                 bot.title,
@@ -1277,6 +1380,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(botsWithDetails);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch pending bots" });
+    }
+  });
+
+  // Admin endpoint to process any pending payout requests (retry worker)
+  app.post('/api/admin/process-pending-payouts', requireAdmin, async (req, res) => {
+    try {
+      const { processPendingPayouts } = await import('./paypal-payout');
+      const result = await processPendingPayouts();
+      res.json({ success: true, ...result });
+    } catch (error) {
+      console.error('Failed to process pending payouts:', error);
+      res.status(500).json({ error: 'Failed to process pending payouts' });
     }
   });
 
