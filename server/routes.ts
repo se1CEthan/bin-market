@@ -57,16 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Public PayPal config (client id + env) for client-side SDK loading
-  app.get('/api/paypal/config', async (req, res) => {
-    try {
-      const clientId = process.env.PAYPAL_CLIENT_ID || null;
-      const env = process.env.NODE_ENV === 'production' ? 'production' : 'sandbox';
-      res.json({ clientId, env });
-    } catch (err) {
-      res.status(500).json({ error: 'Failed to load PayPal config' });
-    }
-  });
+  // ...existing code...
 
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {

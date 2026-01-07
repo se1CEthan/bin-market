@@ -19,7 +19,7 @@
 - **10 Essential Categories**: Ready for bot listings
 - **Authentication System**: Registration, login, email verification working
 - **API Endpoints**: All 50+ endpoints functional
-- **PayPal Integration**: Ready for real payments
+# ...existing code...
 - **License System**: Automatic generation and delivery
 
 ### ✅ Frontend & UI
@@ -48,7 +48,7 @@
 2. **Verify Email** with secure tokens → ✅ WORKING
 3. **Login** with session management → ✅ WORKING
 4. **Browse** 10 bot categories → ✅ WORKING
-5. **Purchase** bots with PayPal → ✅ READY
+# ...existing code...
 6. **Download** with license keys → ✅ READY
 7. **Leave** reviews and ratings → ✅ READY
 

@@ -47,9 +47,7 @@ GOOGLE_CLIENT_ID=your_google_client_id_here
 GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 GOOGLE_CALLBACK_URL=https://www.braininspirednetwork.cloud/api/auth/google/callback
 
-PAYPAL_CLIENT_ID=your_paypal_client_id_here
-PAYPAL_CLIENT_SECRET=your_paypal_client_secret_here
-PLATFORM_PAYPAL_EMAIL=your_paypal_email@example.com
+# ...existing code...
 
 EMAIL_SERVICE=gmail
 EMAIL_USER=
@@ -184,6 +182,6 @@ After successful deployment:
 - ✅ **Full Functionality**: All features working
 - ✅ **Database Connected**: Live data from PostgreSQL
 - ✅ **Authentication**: User registration/login working
-- ✅ **PayPal Integration**: Payment processing ready
+   # ...existing code...
 
 **Your BIN marketplace will be live and accessible to users worldwide!** 🚀

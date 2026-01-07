@@ -57,9 +57,6 @@ Since you're already using Render PostgreSQL:
    DATABASE_URL=postgresql://bin_user:sKXv8hnzECws3bLBFBo8Cja9vJwcRxL1@dpg-d56itsv5r7bs73fkci40-a.oregon-postgres.render.com/bin_marketplace_dt08?sslmode=require
    SESSION_SECRET=BIN_PRODUCTION_SECRET_KEY_2025_SECURE_RANDOM_STRING
    FRONTEND_URL=https://www.braininspirednetwork.cloud
-   PAYPAL_CLIENT_ID=AZTfTJQNpGuNGSwdpUdKhidXelpciVRKOD45WWF9g8z9n3DqFpPdqIlQlOqArPke5wd-QJc6Tw5oC27_
-   PAYPAL_CLIENT_SECRET=EFHMSg4ml1jetKhpUK2tUrEek19RwX2-Ogouab7g-lAq7yKz7A3WZoYAnSlHcyJHe6L-4fu0BKUgQo4b
-   PLATFORM_PAYPAL_EMAIL=xselle34@gmail.com
    PORT=5000
    NODE_ENV=production
    ```
@@ -121,7 +118,7 @@ Built Files:
 - **Complete Functionality**: All pages working
 - **Database**: Connected to Render PostgreSQL
 - **Authentication**: User registration/login system
-- **PayPal Integration**: Payment processing ready
+# ...existing code...
 - **Error Handling**: Comprehensive error boundaries
 - **SEO Optimized**: Meta tags and structured data
 

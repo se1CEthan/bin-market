@@ -19,7 +19,7 @@ I spent 3 months building a marketplace where developers can sell automation bot
 Features:
 • Buy ready-made bots (WhatsApp, Instagram, scrapers, AI)
 • Sell your bots
-• Instant PayPal payouts
+# ...existing code...
 • Built-in chat
 
 Would love your feedback! What features would you add?

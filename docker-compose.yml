@@ -28,8 +28,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:5000/api/auth/google/callback}
-      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
-      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}
+      # ...existing code...
     depends_on:
       postgres:
         condition: service_healthy

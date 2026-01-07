@@ -28,7 +28,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { PayPalSettings } from '@/components/PayPalSettings';
+// ...existing code...
 
 interface DeveloperStats {
   totalBots: number;

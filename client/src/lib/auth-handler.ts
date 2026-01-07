@@ -1,11 +1,10 @@
-// Handle OAuth callback with user type and PayPal email
-export function initiateGoogleAuth(isDeveloper: boolean, paypalEmail?: string) {
+// Handle OAuth callback with user type
+export function initiateGoogleAuth(isDeveloper: boolean) {
   const params = new URLSearchParams();
   
   if (isDeveloper) {
     params.append('userType', 'developer');
-    if (paypalEmail) {
-      params.append('paypalEmail', paypalEmail);
+    // ...existing code...
     }
   }
   

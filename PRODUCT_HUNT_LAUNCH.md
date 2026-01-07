@@ -144,7 +144,7 @@ I noticed developers were building amazing automation bots but had nowhere to se
 🎯 Key Features:
 • 95% revenue share for developers (lowest in the industry!)
 • 8 categories: AI, Social Media, Business, E-commerce, Data Scraping, Marketing, Gaming, Finance
-• Instant payouts via PayPal
+# ...existing code...
 • Built-in chat between buyers and sellers
 • Reviews and ratings system
 
