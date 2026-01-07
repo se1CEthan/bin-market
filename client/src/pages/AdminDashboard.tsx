@@ -93,7 +93,26 @@ export default function AdminDashboard() {
 
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
+          {/* Animation styles */}
+          <style>{`
+            .admin-animate {
+              opacity: 0;
+              transform: translateY(20px);
+              animation: fadeInUp 0.7s cubic-bezier(.4,0,.2,1) forwards;
+            }
+            @keyframes fadeInUp {
+              to {
+                opacity: 1;
+                transform: none;
+              }
+            }
+            .admin-card:hover {
+              box-shadow: 0 8px 32px rgba(99,102,241,0.12), 0 1.5px 6px rgba(16,185,129,0.08);
+              transform: scale(1.03);
+              transition: box-shadow 0.3s, transform 0.3s;
+            }
+          `}</style>
+          <Card className="admin-animate admin-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-muted-foreground">Total Bots</p>
@@ -102,7 +121,7 @@ export default function AdminDashboard() {
               <p className="font-mono text-3xl font-bold">{totalBots}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="admin-animate admin-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-muted-foreground">Total Sold</p>
@@ -111,7 +130,7 @@ export default function AdminDashboard() {
               <p className="font-mono text-3xl font-bold">{totalSold}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="admin-animate admin-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-muted-foreground">Total Bought</p>
@@ -120,7 +139,7 @@ export default function AdminDashboard() {
               <p className="font-mono text-3xl font-bold">{totalBought}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="admin-animate admin-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-muted-foreground">Bot Types</p>
@@ -133,7 +152,7 @@ export default function AdminDashboard() {
 
         {/* Charts */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card>
+          <Card className="admin-animate admin-card">
             <CardHeader>
               <CardTitle>Sales by Date</CardTitle>
             </CardHeader>
@@ -153,7 +172,7 @@ export default function AdminDashboard() {
               </ChartContainer>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="admin-animate admin-card">
             <CardHeader>
               <CardTitle>Bots by Type</CardTitle>
             </CardHeader>
@@ -179,7 +198,7 @@ export default function AdminDashboard() {
 
         {/* Detailed Tables */}
         <div className="mb-8">
-          <Card>
+          <Card className="admin-animate admin-card">
             <CardHeader>
               <CardTitle>Bot Uploads</CardTitle>
             </CardHeader>
@@ -208,7 +227,7 @@ export default function AdminDashboard() {
           </Card>
         </div>
         <div className="mb-8">
-          <Card>
+          <Card className="admin-animate admin-card">
             <CardHeader>
               <CardTitle>Bot Sales</CardTitle>
             </CardHeader>
