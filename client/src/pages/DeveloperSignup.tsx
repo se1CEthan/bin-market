@@ -86,7 +86,7 @@ export default function DeveloperSignup() {
             </div>
             <h3 className="font-semibold text-lg mb-2">Instant Payouts</h3>
             <p className="text-sm text-muted-foreground">
-              Request payouts anytime. Get paid directly to your PayPal.
+              Request payouts anytime. Get paid directly to your crypto wallet.
             </p>
           </Card>
 
@@ -121,7 +121,7 @@ export default function DeveloperSignup() {
               <div>
                 <p className="font-semibold">Built-in Payment Processing</p>
                 <p className="text-sm text-muted-foreground">
-                  Secure PayPal integration. We handle all transactions for you.
+                  Secure crypto payment integration. We handle all transactions for you.
                 </p>
               </div>
             </div>

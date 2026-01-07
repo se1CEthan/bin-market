@@ -28,6 +28,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { CryptoSettings } from '@/components/CryptoSettings';
 // ...existing code...
 
 interface DeveloperStats {
@@ -172,7 +173,7 @@ const DeveloperDashboard: React.FC = () => {
                 <CardContent className="p-6 text-center">
                   <TrendingUp className="w-8 h-8 text-blue-500 mx-auto mb-3" />
                   <h3 className="font-semibold mb-2">Instant Payouts</h3>
-                  <p className="text-sm text-muted-foreground">Get paid via PayPal automatically</p>
+                  <p className="text-sm text-muted-foreground">Get paid via crypto automatically</p>
                 </CardContent>
               </Card>
               <Card>
@@ -496,7 +497,7 @@ const DeveloperDashboard: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <PayPalSettings />
+                      <CryptoSettings />
                     </div>
                   </CardContent>
                 </Card>
@@ -519,7 +520,7 @@ const DeveloperDashboard: React.FC = () => {
                             <div className="text-sm font-medium">${Number(p.amount).toFixed(2)}</div>
                             <div className="text-xs text-muted-foreground">{new Date(p.createdAt).toLocaleString()}</div>
                           </div>
-                          <div className="text-sm text-muted-foreground">{p.paypalEmail}</div>
+                          <div className="text-sm text-muted-foreground">{p.cryptoWallet}</div>
                           <div className="flex items-center gap-3">
                             <div className={`px-2 py-1 rounded text-xs ${p.status === 'paid' ? 'bg-green-100 text-green-800' : p.status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
                               {p.status}

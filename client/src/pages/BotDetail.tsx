@@ -61,9 +61,9 @@ export default function BotDetail() {
       return response.json();
     },
     onSuccess: (data) => {
-      if (data.approvalUrl) {
-        // Redirect to PayPal for payment
-        window.location.href = data.approvalUrl;
+      if (data.paymentUrl) {
+        // Redirect to crypto payment page
+        window.location.href = data.paymentUrl;
       } else {
         toast({
           title: 'Purchase Successful!',

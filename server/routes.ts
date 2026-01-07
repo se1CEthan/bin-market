@@ -7,7 +7,7 @@ import path from "path";
 import { storage } from "./storage";
 import { setupAuth, requireAuth, requireDeveloper, requireAdmin } from "./auth";
 import { AuthService } from "./services/auth";
-import { NowPaymentsService } from "./services/nowpayments";
+import { nowPaymentsService } from "./services/nowpayments";
 import { LicenseService } from "./services/license";
 import { sendPurchaseConfirmation } from "./services/email";
 
@@ -43,7 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Bot ID and amount are required" });
       }
       const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
-      const invoice = await NowPaymentsService.createInvoice(
+      const invoice = await nowPaymentsService.createInvoice(
         botId,
         (req.user as any).id,
         parseFloat(amount),
@@ -57,14 +57,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // NOWPayments IPN (Instant Payment Notification) callback
-  app.post("/api/nowpayments/ipn", async (req, res) => {
+  // Crypto settings routes
+  app.get("/api/developer/crypto", requireDeveloper, async (req, res) => {
     try {
-      const result = await NowPaymentsService.handleIPN(req.body);
-      res.json(result);
-    } catch (error: any) {
-      console.error('NOWPayments IPN error:', error);
-      res.status(500).json({ error: error.message });
+      const user = await storage.getUser((req.user as any).id);
+      res.json({
+        cryptoWallet: user?.cryptoWallet || '',
+        cryptoEnabled: user?.cryptoEnabled || false,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch crypto settings" });
+    }
+  });
+
+  app.post("/api/developer/crypto", requireDeveloper, async (req, res) => {
+    try {
+      const { cryptoWallet, cryptoEnabled } = req.body;
+      
+      if (!cryptoWallet || typeof cryptoWallet !== 'string') {
+        return res.status(400).json({ error: "Valid crypto wallet address is required" });
+      }
+
+      const user = await storage.updateUser((req.user as any).id, {
+        cryptoWallet: cryptoWallet.trim(),
+        cryptoEnabled: Boolean(cryptoEnabled),
+      });
+
+      res.json({
+        cryptoWallet: user.cryptoWallet,
+        cryptoEnabled: user.cryptoEnabled,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save crypto settings" });
     }
   });
 
@@ -205,8 +229,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  // Enhanced PayPal routes (Primary Payment Method)
-  app.post("/api/paypal/create-order", requireAuth, async (req, res) => {
+  // Enhanced NOWPayments crypto routes (Primary Payment Method)
+  app.post("/api/crypto/create-invoice", requireAuth, async (req, res) => {
     try {
       const { botId, amount } = req.body;
       
@@ -216,33 +240,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Use request origin as a fallback for return URLs when FRONTEND_URL is not configured
       const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
-      const order = await PayPalService.createOrder(
+      const invoice = await nowPaymentsService.createInvoice(
         botId,
         (req.user as any).id,
         parseFloat(amount),
-        'USD',
+        'usd',
         origin,
       );
 
-      res.json(order);
+      res.json(invoice);
     } catch (error: any) {
-      console.error('PayPal order creation error:', error);
+      console.error('NOWPayments invoice creation error:', error);
       res.status(500).json({ error: error.message });
     }
   });
 
-  app.post("/api/paypal/capture-order", requireAuth, async (req, res) => {
+  app.post("/api/crypto/check-payment", requireAuth, async (req, res) => {
     try {
-      const { orderId } = req.body;
+      const { invoiceId } = req.body;
       
-      if (!orderId) {
-        return res.status(400).json({ error: "Order ID is required" });
+      if (!invoiceId) {
+        return res.status(400).json({ error: "Invoice ID is required" });
       }
 
-      const result = await PayPalService.captureOrder(orderId);
+      const result = await nowPaymentsService.checkPaymentStatus(invoiceId);
       res.json(result);
     } catch (error: any) {
-      console.error('PayPal capture error:', error);
+      console.error('NOWPayments status check error:', error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -1298,13 +1322,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ success: true, transaction, license: licenseData });
       }
 
-      // Create PayPal order via internal PayPalService directly (avoid internal HTTP call requiring session cookies)
-      console.log('Creating PayPal order (server-side) for bot:', bot.id, 'price:', bot.price);
-      const paypalOrder = await PayPalService.createOrder(bot.id, (req.user as any).id, amount);
-      console.log('PayPal order response (server-side):', paypalOrder && paypalOrder.id ? `id=${paypalOrder.id}` : JSON.stringify(paypalOrder).slice(0, 2000));
+      // Create NOWPayments invoice via internal nowPaymentsService directly
+      console.log('Creating NOWPayments invoice (server-side) for bot:', bot.id, 'price:', bot.price);
+      const cryptoInvoice = await nowPaymentsService.createInvoice(bot.id, (req.user as any).id, amount, 'usd');
+      console.log('NOWPayments invoice response (server-side):', cryptoInvoice && cryptoInvoice.id ? `id=${cryptoInvoice.id}` : JSON.stringify(cryptoInvoice).slice(0, 2000));
 
-      // Create or reuse transaction record (PayPalService may have already created one)
-      let transaction = await storage.getTransactionByPaypalOrderId(paypalOrder.id);
+      // Create or reuse transaction record (nowPaymentsService may have already created one)
+      let transaction = await storage.getTransactionByInvoiceId(cryptoInvoice.id);
       if (!transaction) {
         transaction = await storage.createTransaction({
           buyerId: (req.user as any).id,
@@ -1313,16 +1337,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           amount: amount.toString(),
           platformFee,
           developerEarnings,
-          paymentMethod: 'paypal',
+          paymentMethod: 'crypto',
           status: 'pending',
-          paypalOrderId: paypalOrder.id,
+          cryptoInvoiceId: cryptoInvoice.id,
         });
       }
 
       res.json({ 
         success: true, 
-        paypalOrderId: paypalOrder.id,
-        approvalUrl: paypalOrder.links.find((link: any) => link.rel === 'approve')?.href,
+        invoiceId: cryptoInvoice.id,
+        paymentUrl: cryptoInvoice.invoice_url,
+        payAddress: cryptoInvoice.pay_address,
+        payAmount: cryptoInvoice.pay_amount,
+        payCurrency: cryptoInvoice.pay_currency,
         transaction 
       });
     } catch (error: any) {
