@@ -69,8 +69,9 @@ export const transactions = pgTable("transactions", {
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(),
   developerEarnings: decimal("developer_earnings", { precision: 10, scale: 2 }).notNull(),
-  paymentMethod: text("payment_method").notNull(), // paypal
+  paymentMethod: text("payment_method").notNull(), // nowpayments
   paypalOrderId: text("paypal_order_id"),
+  nowpaymentsInvoiceId: text("nowpayments_invoice_id"),
   status: text("status").notNull().default("pending"), // pending, completed, refunded, failed
   refundReason: text("refund_reason"),
   refundedAt: timestamp("refunded_at"),
