@@ -13,21 +13,46 @@ import {
 } from '@/components/ui/table';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Users, Bot, DollarSign, CheckCircle2, XCircle, Eye } from 'lucide-react';
+import { Shield, Users, Bot, DollarSign, CheckCircle2, XCircle, Eye, BarChart2, PieChart } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Link } from 'wouter';
+import { ChartContainer } from '@/components/ui/chart';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const { data: stats } = useQuery({
-    queryKey: ['/api/admin/stats'],
-  });
 
-  const { data: pendingBots } = useQuery({
-    queryKey: ['/api/admin/pending-bots'],
+  // Enhanced analytics for admin
+  const { data: analytics } = useQuery({
+    queryKey: ['/api/admin/bots-analytics'],
   });
+  const bots = analytics?.bots || [];
+  const transactions = analytics?.transactions || [];
+
+  // Calculate stats
+  const totalBots = bots.length;
+  const totalSold = transactions.length;
+  const totalBought = transactions.length; // same as sold for marketplace
+  const botTypes = Array.from(new Set(bots.map((b: any) => b.type || b.categoryId)));
+  const botsByType = botTypes.map(type => ({
+    type,
+    count: bots.filter((b: any) => (b.type || b.categoryId) === type).length
+  }));
+  const botsByUser = bots.reduce((acc: any, bot: any) => {
+    acc[bot.developerId] = (acc[bot.developerId] || 0) + 1;
+    return acc;
+  }, {});
+  const salesByBot = bots.map((bot: any) => ({
+    title: bot.title,
+    count: transactions.filter((t: any) => t.botId === bot.id).length
+  }));
+  const salesByDate = transactions.reduce((acc: any, t: any) => {
+    const date = new Date(t.createdAt).toISOString().slice(0, 10);
+    acc[date] = (acc[date] || 0) + 1;
+    return acc;
+  }, {});
+  const salesByDateArr = Object.entries(salesByDate).map(([date, count]) => ({ date, count }));
 
   const approveMutation = useMutation({
     mutationFn: async ({ botId, status }: { botId: string; status: 'approved' | 'rejected' }) => {
@@ -66,53 +91,148 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground">Manage platform, users, and content</p>
         </div>
 
-        {/* Stats Cards */}
+        {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-muted-foreground">Total Users</p>
-                <Users className="h-5 w-5 text-primary" />
-              </div>
-              <p className="font-mono text-3xl font-bold" data-testid="text-total-users">
-                {stats?.totalUsers || '0'}
-              </p>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-muted-foreground">Total Bots</p>
                 <Bot className="h-5 w-5 text-primary" />
               </div>
-              <p className="font-mono text-3xl font-bold" data-testid="text-total-bots">
-                {stats?.totalBots || '0'}
-              </p>
+              <p className="font-mono text-3xl font-bold">{totalBots}</p>
             </CardContent>
           </Card>
-
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-muted-foreground">Platform Revenue</p>
+                <p className="text-sm text-muted-foreground">Total Sold</p>
                 <DollarSign className="h-5 w-5 text-primary" />
               </div>
-              <p className="font-mono text-3xl font-bold text-primary" data-testid="text-platform-revenue">
-                ${stats?.platformRevenue || '0.00'}
-              </p>
+              <p className="font-mono text-3xl font-bold">{totalSold}</p>
             </CardContent>
           </Card>
-
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-muted-foreground">Pending Approvals</p>
-                <Shield className="h-5 w-5 text-yellow-500" />
+                <p className="text-sm text-muted-foreground">Total Bought</p>
+                <DollarSign className="h-5 w-5 text-primary" />
               </div>
-              <p className="font-mono text-3xl font-bold" data-testid="text-pending-approvals">
-                {stats?.pendingApprovals || '0'}
-              </p>
+              <p className="font-mono text-3xl font-bold">{totalBought}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-muted-foreground">Bot Types</p>
+                <PieChart className="h-5 w-5 text-primary" />
+              </div>
+              <p className="font-mono text-3xl font-bold">{botTypes.length}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sales by Date</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{ sales: { color: '#6366f1' } }}>
+                {({ ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid }) => (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={salesByDateArr}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="count" stroke="#6366f1" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </ChartContainer>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Bots by Type</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{ bots: { color: '#10b981' } }}>
+                {({ ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend }) => (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie data={botsByType} dataKey="count" nameKey="type" cx="50%" cy="50%" outerRadius={80} fill="#10b981">
+                        {botsByType.map((entry, idx) => (
+                          <Cell key={`cell-${idx}`} fill={['#10b981', '#6366f1', '#f59e42', '#ef4444', '#3b82f6'][idx % 5]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Detailed Tables */}
+        <div className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Bot Uploads</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Bot</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Developer</TableHead>
+                    <TableHead>Created</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bots.map((bot: any) => (
+                    <TableRow key={bot.id}>
+                      <TableCell>{bot.title}</TableCell>
+                      <TableCell>{bot.type || bot.categoryId}</TableCell>
+                      <TableCell>{bot.developerId}</TableCell>
+                      <TableCell>{new Date(bot.createdAt).toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Bot Sales</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Bot</TableHead>
+                    <TableHead>Buyer</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transactions.map((t: any) => (
+                    <TableRow key={t.id}>
+                      <TableCell>{bots.find((b: any) => b.id === t.botId)?.title || t.botId}</TableCell>
+                      <TableCell>{t.buyerId}</TableCell>
+                      <TableCell>${t.amount}</TableCell>
+                      <TableCell>{new Date(t.createdAt).toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </div>
