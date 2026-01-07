@@ -1,13 +1,4 @@
-  // Admin: Detailed bots and transactions analytics
-  app.get("/api/admin/bots-analytics", requireAdmin, async (req, res) => {
-    try {
-      const bots = await db.query.bots.findMany();
-      const transactions = await db.query.transactions.findMany();
-      res.json({ bots, transactions });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch bots/transactions analytics" });
-    }
-  });
+// ...existing code...
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
@@ -32,6 +23,16 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+    // Admin: Detailed bots and transactions analytics
+    app.get("/api/admin/bots-analytics", requireAdmin, async (req, res) => {
+      try {
+        const bots = await db.query.bots.findMany();
+        const transactions = await db.query.transactions.findMany();
+        res.json({ bots, transactions });
+      } catch (error) {
+        res.status(500).json({ error: "Failed to fetch bots/transactions analytics" });
+      }
+    });
   setupAuth(app);
 
   // NOWPayments crypto payment routes
