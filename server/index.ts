@@ -18,13 +18,13 @@ declare module 'http' {
   }
 }
 
+const isProd = process.env.NODE_ENV === 'production';
+
 // Session configuration with PostgreSQL store
 // Only trust proxy when running in production behind a reverse proxy
 if (isProd) {
   app.set('trust proxy', 1); // Trust Render's proxy
 }
-
-const isProd = process.env.NODE_ENV === 'production';
 const frontendUrl = process.env.FRONTEND_URL || '';
 let cookieDomain: string | undefined = undefined;
 try {
@@ -99,7 +99,31 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  try {
+    console.log('🚀 Starting BIN Marketplace server...');
+    console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🔌 Port: ${process.env.PORT || '5000'}`);
+    
+    // Test database connection
+    try {
+      await pool.query('SELECT 1');
+      console.log('✅ Database connection successful');
+    } catch (dbError) {
+      console.error('❌ Database connection failed:', dbError);
+      throw dbError;
+    }
+
+    const server = await registerRoutes(app);
+
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      env: process.env.NODE_ENV,
+      port: process.env.PORT || '5000'
+    });
+  });
 
   // Debug endpoint to inspect session and cookies (safe for local testing only)
   app.get('/api/debug/session', (req, res) => {
@@ -142,6 +166,38 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`🚀 Server successfully started on port ${port}`);
+    log(`🌐 Environment: ${process.env.NODE_ENV}`);
+    log(`📊 Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}`);
+    log(`🔑 Session secret: ${process.env.SESSION_SECRET ? 'Set' : 'Not set'}`);
   });
+
+  // Handle server errors
+  server.on('error', (error: any) => {
+    console.error('❌ Server error:', error);
+    if (error.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${port} is already in use`);
+    }
+  });
+
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('🛑 SIGTERM received, shutting down gracefully');
+    server.close(() => {
+      console.log('✅ Server closed');
+      process.exit(0);
+    });
+  });
+
+  process.on('SIGINT', () => {
+    console.log('🛑 SIGINT received, shutting down gracefully');
+    server.close(() => {
+      console.log('✅ Server closed');
+      process.exit(0);
+    });
+  });
+} catch (error) {
+  console.error('❌ Failed to start server:', error);
+  process.exit(1);
+}
 })();
