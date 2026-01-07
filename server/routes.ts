@@ -8,6 +8,7 @@ import { setupAuth, requireAuth, requireDeveloper, requireAdmin } from "./auth";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { AuthService } from "./services/auth";
 import { PayPalService } from "./services/paypal";
+import { NowPaymentsService } from "./services/nowpayments";
 import { LicenseService } from "./services/license";
 import { sendPurchaseConfirmation } from "./services/email";
 
@@ -25,10 +26,38 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
-  // PayPal routes
-  app.get("/api/paypal/setup", loadPaypalDefault);
-  app.post("/api/paypal/order", createPaypalOrder);
-  app.post("/api/paypal/order/:orderID/capture", capturePaypalOrder);
+  // NOWPayments crypto payment routes
+  app.post("/api/nowpayments/create-invoice", requireAuth, async (req, res) => {
+    try {
+      const { botId, amount } = req.body;
+      if (!botId || !amount) {
+        return res.status(400).json({ error: "Bot ID and amount are required" });
+      }
+      const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
+      const invoice = await NowPaymentsService.createInvoice(
+        botId,
+        (req.user as any).id,
+        parseFloat(amount),
+        'usd',
+        origin,
+      );
+      res.json(invoice);
+    } catch (error: any) {
+      console.error('NOWPayments invoice creation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // NOWPayments IPN (Instant Payment Notification) callback
+  app.post("/api/nowpayments/ipn", async (req, res) => {
+    try {
+      const result = await NowPaymentsService.handleIPN(req.body);
+      res.json(result);
+    } catch (error: any) {
+      console.error('NOWPayments IPN error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   // Public PayPal config (client id + env) for client-side SDK loading
   app.get('/api/paypal/config', async (req, res) => {
