@@ -23,10 +23,28 @@ export default defineConfig({
     target: 'es2018',
     minify: 'esbuild',
     sourcemap: false,
-    brotliSize: false,
     chunkSizeWarningLimit: 2000,
+    // Enable cache busting with content-based hashing
     rollupOptions: {
       output: {
+        // Add timestamp and content hash to filenames for cache busting
+        entryFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
+        chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
+        assetFileNames: (assetInfo) => {
+          if (!assetInfo.names || assetInfo.names.length === 0) {
+            return `assets/[name]-[hash]-${Date.now()}[extname]`;
+          }
+          const name = assetInfo.names[0];
+          const info = name.split('.');
+          const ext = info[info.length - 1];
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
+            return `assets/img/[name]-[hash]-${Date.now()}[extname]`;
+          }
+          if (/css/i.test(ext)) {
+            return `assets/css/[name]-[hash]-${Date.now()}[extname]`;
+          }
+          return `assets/[name]-[hash]-${Date.now()}[extname]`;
+        },
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (id.includes('lucide-react')) return 'vendor_icons';

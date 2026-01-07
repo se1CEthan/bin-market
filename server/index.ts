@@ -65,8 +65,12 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: false }));
 
-// Serve uploaded files
-app.use('/uploads', express.static('uploads'));
+// Serve uploaded files with cache headers
+app.use('/uploads', express.static('uploads', {
+  maxAge: '1d', // Cache uploaded files for 1 day
+  etag: true,
+  lastModified: true
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
