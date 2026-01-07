@@ -12,8 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { AdvancedSearch } from '@/components/AdvancedSearch';
 import { NotificationBell } from '@/components/NotificationCenter';
-import { Search, Upload, User, LogOut, Settings, ShoppingBag, LayoutDashboard, Heart, FolderOpen, GitCompare, Bell, Zap, TrendingUp, Sparkles, Command, Menu, X } from 'lucide-react';
-import { ArrowRight } from '@/components/icons/ArrowRight';
+import { Search, Upload, User, LogOut, Settings, ShoppingBag, LayoutDashboard, Heart, FolderOpen, GitCompare, Bell, Zap, TrendingUp, Sparkles, Command, Menu, X, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

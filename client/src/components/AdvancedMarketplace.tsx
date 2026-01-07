@@ -34,9 +34,9 @@ import {
   Flame,
   Crown,
   Target,
-  Rocket
+  Rocket,
+  ArrowRight
 } from 'lucide-react';
-import { ArrowRight } from '@/components/icons/ArrowRight';
 import { useLiveStats, useTrendingBots, useLiveActivity } from '@/lib/live-data';
 import { cn } from '@/lib/utils';
 
