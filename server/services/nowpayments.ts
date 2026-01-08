@@ -65,13 +65,21 @@ class NOWPaymentsService {
   constructor() {
     this.config = {
       apiKey: process.env.NOWPAYMENTS_API_KEY || '',
-      ipnSecret: process.env.NOWPAYMENTS_IPN_SECRET || '',
+      ipnSecret: process.env.NOWPAYMENTS_IPN_SECRET || 'default-secret',
       sandboxMode: process.env.NODE_ENV !== 'production'
     };
     
     this.baseURL = this.config.sandboxMode 
       ? 'https://api-sandbox.nowpayments.io/v1'
       : 'https://api.nowpayments.io/v1';
+
+    // Log configuration status (without exposing sensitive data)
+    console.log('NOWPayments Service initialized:', {
+      hasApiKey: !!this.config.apiKey,
+      apiKeyLength: this.config.apiKey.length,
+      sandboxMode: this.config.sandboxMode,
+      baseURL: this.baseURL
+    });
   }
 
   private getHeaders() {
@@ -319,6 +327,128 @@ class NOWPaymentsService {
     } catch (error) {
       console.error('Error fetching exchange rate:', error);
       throw new Error('Failed to fetch exchange rate');
+    }
+  }
+
+  /**
+   * Create invoice for bot purchase (wrapper around createPayment for compatibility)
+   */
+  async createInvoice(
+    botId: string,
+    buyerId: string,
+    amount: number,
+    currency: string = 'usd',
+    returnUrl?: string
+  ): Promise<any> {
+    try {
+      // Validate API key
+      if (!this.config.apiKey) {
+        throw new Error('NOWPayments API key is not configured');
+      }
+
+      // Validate inputs
+      if (!botId || !buyerId || !amount || amount <= 0) {
+        throw new Error('Invalid parameters: botId, buyerId, and positive amount are required');
+      }
+
+      const orderId = `bot_${botId}_${Date.now()}_${buyerId}`;
+      const baseUrl = returnUrl || process.env.FRONTEND_URL || 'http://localhost:5000';
+      
+      console.log('Creating NOWPayments invoice with params:', {
+        botId,
+        buyerId,
+        amount,
+        currency,
+        orderId,
+        baseUrl
+      });
+
+      const paymentData: CreatePaymentRequest = {
+        price_amount: amount,
+        price_currency: currency.toUpperCase(),
+        pay_currency: 'btc', // Default to Bitcoin, can be changed by user
+        order_id: orderId,
+        order_description: `Bot Purchase - ${botId}`,
+        ipn_callback_url: `${baseUrl}/api/nowpayments/webhook`,
+        success_url: `${baseUrl}/payment/success?botId=${botId}`,
+        cancel_url: `${baseUrl}/bot/${botId}`,
+      };
+
+      console.log('Sending request to NOWPayments:', {
+        url: `${this.baseURL}/payment`,
+        data: paymentData
+      });
+
+      const response = await axios.post(`${this.baseURL}/payment`, paymentData, {
+        headers: this.getHeaders(),
+        timeout: 30000 // 30 second timeout
+      });
+
+      console.log('NOWPayments response received:', {
+        status: response.status,
+        hasData: !!response.data,
+        paymentId: response.data?.payment_id
+      });
+
+      // Transform response to match expected interface
+      const paymentResponse = response.data;
+      return {
+        id: paymentResponse.payment_id,
+        invoice_url: paymentResponse.payment_url,
+        pay_address: paymentResponse.pay_address,
+        pay_amount: paymentResponse.pay_amount,
+        payCurrency: paymentResponse.pay_currency,
+        price_amount: paymentResponse.price_amount,
+        price_currency: paymentResponse.price_currency,
+        order_id: paymentResponse.order_id,
+        payment_status: paymentResponse.payment_status,
+        created_at: paymentResponse.created_at,
+        updated_at: paymentResponse.updated_at
+      };
+    } catch (error: any) {
+      console.error('NOWPayments createInvoice error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        config: {
+          hasApiKey: !!this.config.apiKey,
+          baseURL: this.baseURL
+        }
+      });
+      
+      if (error.response?.data) {
+        throw new Error(`NOWPayments API error: ${error.response.data.message || JSON.stringify(error.response.data)}`);
+      }
+      
+      throw new Error(`Failed to create payment invoice: ${error.message}`);
+    }
+  }
+
+  /**
+   * Check payment status by invoice/payment ID
+   */
+  async checkPaymentStatus(invoiceId: string): Promise<any> {
+    try {
+      const response = await axios.get(`${this.baseURL}/payment/${invoiceId}`, {
+        headers: this.getHeaders()
+      });
+
+      const payment = response.data;
+      return {
+        id: payment.payment_id,
+        status: payment.payment_status,
+        pay_address: payment.pay_address,
+        pay_amount: payment.pay_amount,
+        pay_currency: payment.pay_currency,
+        price_amount: payment.price_amount,
+        price_currency: payment.price_currency,
+        order_id: payment.order_id,
+        created_at: payment.created_at,
+        updated_at: payment.updated_at
+      };
+    } catch (error: any) {
+      console.error('Error checking payment status:', error.response?.data || error.message);
+      throw new Error(`Failed to check payment status: ${error.response?.data?.message || error.message}`);
     }
   }
 }

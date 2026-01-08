@@ -60,6 +60,7 @@ export interface IStorage {
   getTransactionsByBot(botId: string): Promise<Transaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   getTransactionByPaypalOrderId(paypalOrderId: string): Promise<Transaction | undefined>;
+  getTransactionByInvoiceId(invoiceId: string): Promise<Transaction | undefined>;
   updateTransactionStatus(id: string, status: string): Promise<Transaction | undefined>;
   updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction | undefined>;
   hasPurchased(userId: string, botId: string): Promise<boolean>;
@@ -357,6 +358,12 @@ export class DatabaseStorage implements IStorage {
   async getTransactionByPaypalOrderId(paypalOrderId: string): Promise<Transaction | undefined> {
     const [transaction] = await db.select().from(transactions)
       .where(eq(transactions.paypalOrderId, paypalOrderId));
+    return transaction || undefined;
+  }
+
+  async getTransactionByInvoiceId(invoiceId: string): Promise<Transaction | undefined> {
+    const [transaction] = await db.select().from(transactions)
+      .where(eq(transactions.cryptoInvoiceId, invoiceId));
     return transaction || undefined;
   }
 
