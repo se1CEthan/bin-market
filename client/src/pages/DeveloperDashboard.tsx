@@ -157,7 +157,7 @@ const DeveloperDashboard: React.FC = () => {
               </div>
               <h1 className="text-4xl font-bold mb-4">Start Selling Your Bots</h1>
               <p className="text-xl text-muted-foreground mb-8">
-                Join thousands of developers earning money by selling automation bots on BIN Marketplace
+                Join thousands of developers earning money by selling automation bots on SelTech Marketplace
               </p>
             </div>
 
@@ -216,16 +216,16 @@ const DeveloperDashboard: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6 sm:mb-8"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold">Developer Dashboard</h1>
-              <p className="text-muted-foreground">Manage your bots and track your earnings</p>
+              <h1 className="text-2xl sm:text-3xl font-bold">Developer Dashboard</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">Manage your bots and track your earnings</p>
             </div>
             <Button
               onClick={() => setSelectedTab('upload')}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 w-full sm:w-auto"
             >
               <Plus className="w-4 h-4 mr-2" />
               Upload New Bot
@@ -238,52 +238,52 @@ const DeveloperDashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8"
         >
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold">${fmt(stats?.totalRevenue, 2)}</p>
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Revenue</p>
+                  <p className="text-lg sm:text-2xl font-bold">${fmt(stats?.totalRevenue, 2)}</p>
                 </div>
-                <DollarSign className="w-8 h-8 text-green-500" />
+                <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Bots</p>
-                  <p className="text-2xl font-bold">{stats?.activeBots || 0}</p>
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Active Bots</p>
+                  <p className="text-lg sm:text-2xl font-bold">{stats?.activeBots || 0}</p>
                 </div>
-                <Bot className="w-8 h-8 text-blue-500" />
+                <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Sales</p>
-                  <p className="text-2xl font-bold">{stats?.totalSales || 0}</p>
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Sales</p>
+                  <p className="text-lg sm:text-2xl font-bold">{stats?.totalSales || 0}</p>
                 </div>
-                <TrendingUp className="w-8 h-8 text-purple-500" />
+                <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Avg Rating</p>
-                  <p className="text-2xl font-bold">{fmt(stats?.averageRating, 1)}</p>
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Avg Rating</p>
+                  <p className="text-lg sm:text-2xl font-bold">{fmt(stats?.averageRating, 1)}</p>
                 </div>
-                <Star className="w-8 h-8 text-yellow-500" />
+                <Star className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
               </div>
             </CardContent>
           </Card>
@@ -296,31 +296,31 @@ const DeveloperDashboard: React.FC = () => {
           transition={{ delay: 0.2 }}
         >
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 text-xs sm:text-sm">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="bots">My Bots</TabsTrigger>
-              <TabsTrigger value="upload">Upload Bot</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="upload">Upload</TabsTrigger>
+              <TabsTrigger value="analytics" className="hidden sm:block">Analytics</TabsTrigger>
               <TabsTrigger value="earnings">Earnings</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid lg:grid-cols-2 gap-6">
+            <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+              <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Recent Activity */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
-                    <CardDescription>Your latest bot performance</CardDescription>
+                    <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
+                    <CardDescription className="text-sm">Your latest bot performance</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       {bots?.slice(0, 3).map((bot) => (
-                        <div key={bot.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                          <div>
-                            <p className="font-medium">{bot.name}</p>
-                            <p className="text-sm text-muted-foreground">{bot.downloads} downloads</p>
+                        <div key={bot.id} className="flex items-center justify-between p-2 sm:p-3 bg-muted/50 rounded-lg">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm sm:text-base truncate">{bot.name}</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">{bot.downloads} downloads</p>
                           </div>
-                          <Badge variant={bot.status === 'active' ? 'default' : 'secondary'}>
+                          <Badge variant={bot.status === 'active' ? 'default' : 'secondary'} className="text-xs">
                             {bot.status}
                           </Badge>
                         </div>
@@ -332,23 +332,23 @@ const DeveloperDashboard: React.FC = () => {
                 {/* Quick Actions */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Quick Actions</CardTitle>
-                    <CardDescription>Common developer tasks</CardDescription>
+                    <CardTitle className="text-base sm:text-lg">Quick Actions</CardTitle>
+                    <CardDescription className="text-sm">Common developer tasks</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button variant="outline" className="w-full justify-start">
+                  <CardContent className="space-y-2 sm:space-y-3">
+                    <Button variant="outline" className="w-full justify-start text-sm">
                       <Upload className="w-4 h-4 mr-2" />
                       Upload New Bot
                     </Button>
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button variant="outline" className="w-full justify-start text-sm">
                       <BarChart3 className="w-4 h-4 mr-2" />
                       View Analytics
                     </Button>
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button variant="outline" className="w-full justify-start text-sm">
                       <DollarSign className="w-4 h-4 mr-2" />
                       Request Payout
                     </Button>
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button variant="outline" className="w-full justify-start text-sm">
                       <Settings className="w-4 h-4 mr-2" />
                       Developer Settings
                     </Button>

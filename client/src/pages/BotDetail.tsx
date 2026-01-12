@@ -140,11 +140,11 @@ export default function BotDetail() {
     : bot.screenshots || [];
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-4 sm:py-8">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Left Column - Media & Details */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Main Media */}
             <Card className="overflow-hidden">
               {bot.demoVideoUrl ? (
@@ -169,18 +169,18 @@ export default function BotDetail() {
                 </div>
               ) : (
                 <div className="aspect-video bg-muted flex items-center justify-center">
-                  <span className="text-6xl">🤖</span>
+                  <span className="text-4xl sm:text-6xl">🤖</span>
                 </div>
               )}
 
               {/* Screenshot Thumbnails */}
               {allImages.length > 1 && (
-                <div className="p-4 flex gap-2 overflow-x-auto">
+                <div className="p-3 sm:p-4 flex gap-2 overflow-x-auto">
                   {allImages.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedImage(idx)}
-                      className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all ${
+                      className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden border-2 transition-all ${
                         selectedImage === idx ? 'border-primary' : 'border-transparent'
                       }`}
                       data-testid={`button-thumbnail-${idx}`}
@@ -194,45 +194,45 @@ export default function BotDetail() {
 
             {/* Title & Meta */}
             <div>
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="flex-1">
-                  <h1 className="font-display text-3xl md:text-4xl font-bold mb-2" data-testid="text-bot-title">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
+                <div className="flex-1 min-w-0">
+                  <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-2 break-words" data-testid="text-bot-title">
                     {bot.title}
                   </h1>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                      <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-500 text-yellow-500" />
                       <span className="font-semibold" data-testid="text-rating">{bot.averageRating || '0.00'}</span>
                       <span>({bot.reviewCount} reviews)</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Download className="h-4 w-4" />
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                       <span data-testid="text-downloads">{bot.downloadCount} downloads</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                       <span>{bot.viewCount} views</span>
                     </div>
                   </div>
                 </div>
                 {bot.isFeatured && (
-                  <Badge className="bg-primary">Featured</Badge>
+                  <Badge className="bg-primary flex-shrink-0">Featured</Badge>
                 )}
               </div>
 
               {/* Developer Info */}
-              <Card className="p-4">
+              <Card className="p-3 sm:p-4">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
+                  <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
                     <AvatarImage src={bot.developer.avatarUrl || undefined} />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {bot.developer.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">Created by</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm text-muted-foreground">Created by</p>
                     <Link href={`/developer/${bot.developer.id}`}>
-                      <a className="font-semibold hover:text-primary transition-colors" data-testid="link-developer">
+                      <a className="font-semibold hover:text-primary transition-colors text-sm sm:text-base truncate block" data-testid="link-developer">
                         {bot.developer.name}
                       </a>
                     </Link>
@@ -242,9 +242,10 @@ export default function BotDetail() {
                     size="sm"
                     disabled={!user || user.id === bot.developer.id}
                     data-testid="button-message-developer"
+                    className="flex-shrink-0 text-xs sm:text-sm"
                   >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Message
+                    <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    <span className="hidden xs:inline">Message</span>
                   </Button>
                 </div>
               </Card>
@@ -252,22 +253,24 @@ export default function BotDetail() {
 
             {/* Tabs */}
             <Tabs defaultValue="description" className="w-full">
-              <TabsList className="w-full justify-start">
-                <TabsTrigger value="description" data-testid="tab-description">Description</TabsTrigger>
-                <TabsTrigger value="reviews" data-testid="tab-reviews">Reviews ({bot.reviewCount})</TabsTrigger>
-                <TabsTrigger value="sandbox" data-testid="tab-sandbox">
-                  <TestTube className="h-4 w-4 mr-2" />
-                  Test Bot
+              <TabsList className="w-full justify-start overflow-x-auto">
+                <TabsTrigger value="description" data-testid="tab-description" className="text-xs sm:text-sm">Description</TabsTrigger>
+                <TabsTrigger value="reviews" data-testid="tab-reviews" className="text-xs sm:text-sm">Reviews ({bot.reviewCount})</TabsTrigger>
+                <TabsTrigger value="sandbox" data-testid="tab-sandbox" className="text-xs sm:text-sm">
+                  <TestTube className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden xs:inline">Test Bot</span>
+                  <span className="xs:hidden">Test</span>
                 </TabsTrigger>
-                <TabsTrigger value="social" data-testid="tab-social">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Community
+                <TabsTrigger value="social" data-testid="tab-social" className="text-xs sm:text-sm">
+                  <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Community</span>
+                  <span className="sm:hidden">Social</span>
                 </TabsTrigger>
-                <TabsTrigger value="compare" data-testid="tab-compare">
-                  <GitCompare className="h-4 w-4 mr-2" />
-                  Compare
+                <TabsTrigger value="compare" data-testid="tab-compare" className="text-xs sm:text-sm">
+                  <GitCompare className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Compare</span>
                 </TabsTrigger>
-                <TabsTrigger value="support" data-testid="tab-support">Support</TabsTrigger>
+                <TabsTrigger value="support" data-testid="tab-support" className="text-xs sm:text-sm">Support</TabsTrigger>
               </TabsList>
 
               <TabsContent value="description" className="space-y-4">
@@ -392,12 +395,12 @@ export default function BotDetail() {
           </div>
 
           {/* Right Column - Purchase Card */}
-          <div>
-            <Card className="sticky top-24">
-              <CardContent className="p-6 space-y-6">
+          <div className="order-first lg:order-last">
+            <Card className="lg:sticky lg:top-24">
+              <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Price</p>
-                  <p className="font-mono text-4xl font-bold text-primary" data-testid="text-price">
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-2">Price</p>
+                  <p className="font-mono text-2xl sm:text-4xl font-bold text-primary" data-testid="text-price">
                     ${bot.price}
                   </p>
                 </div>
@@ -405,19 +408,19 @@ export default function BotDetail() {
                 <Separator />
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-xs sm:text-sm">
                     <span className="text-muted-foreground">Category</span>
-                    <Badge variant="secondary">{bot.category.name}</Badge>
+                    <Badge variant="secondary" className="text-xs">{bot.category.name}</Badge>
                   </div>
                   {bot.supportedOS && bot.supportedOS.length > 0 && (
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
                       <span className="text-muted-foreground">Supported OS</span>
-                      <span className="font-medium">{bot.supportedOS.join(', ')}</span>
+                      <span className="font-medium text-right text-xs sm:text-sm">{bot.supportedOS.join(', ')}</span>
                     </div>
                   )}
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-xs sm:text-sm">
                     <span className="text-muted-foreground">Status</span>
-                    <Badge variant={bot.status === 'approved' ? 'default' : 'secondary'}>
+                    <Badge variant={bot.status === 'approved' ? 'default' : 'secondary'} className="text-xs">
                       {bot.status}
                     </Badge>
                   </div>
@@ -428,12 +431,12 @@ export default function BotDetail() {
                 {bot.hasPurchased ? (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-green-500">
-                      <CheckCircle2 className="h-5 w-5" />
-                      <span className="font-semibold">Already Purchased</span>
+                      <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="font-semibold text-sm sm:text-base">Already Purchased</span>
                     </div>
                     <Button className="w-full" asChild data-testid="button-download">
                       <Link href={`/download/${bot.id}`}>
-                        <Download className="h-4 w-4 mr-2" />
+                        <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                         Download Bot
                       </Link>
                     </Button>
@@ -441,13 +444,13 @@ export default function BotDetail() {
                 ) : (
                   <div className="space-y-3">
                     <Button
-                      className="w-full"
+                      className="w-full text-sm sm:text-base"
                       size="lg"
                       onClick={handlePurchase}
                       disabled={!user || user.id === bot.developer.id || purchaseMutation.isPending}
                       data-testid="button-buy-now"
                     >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                       {purchaseMutation.isPending ? 'Processing...' : 'Buy Now'}
                     </Button>
                     <TestBox 
@@ -459,15 +462,15 @@ export default function BotDetail() {
 
                 <div className="text-xs text-muted-foreground space-y-1">
                   <p className="flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" />
+                    <CheckCircle2 className="h-2 w-2 sm:h-3 sm:w-3" />
                     Instant download after purchase
                   </p>
                   <p className="flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" />
+                    <CheckCircle2 className="h-2 w-2 sm:h-3 sm:w-3" />
                     7-day money-back guarantee
                   </p>
                   <p className="flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" />
+                    <CheckCircle2 className="h-2 w-2 sm:h-3 sm:w-3" />
                     Developer support included
                   </p>
                 </div>

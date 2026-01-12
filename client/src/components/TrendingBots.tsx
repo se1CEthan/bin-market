@@ -67,38 +67,38 @@ export function TrendingBots({
           {displayBots.map((bot, index) => (
             <motion.div
               key={bot.id}
-              className="flex items-center justify-between py-3 border-b border-border/50 last:border-0"
+              className="flex items-center justify-between py-2 sm:py-3 border-b border-border/50 last:border-0"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                 <div className="flex items-center gap-1">
-                  <span className="text-sm font-bold text-muted-foreground">
+                  <span className="text-xs sm:text-sm font-bold text-muted-foreground">
                     #{index + 1}
                   </span>
-                  {index === 0 && <Crown className="w-4 h-4 text-yellow-500" />}
-                  {index < 3 && <Flame className="w-4 h-4 text-orange-500" />}
+                  {index === 0 && <Crown className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />}
+                  {index < 3 && <Flame className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500" />}
                 </div>
-                <div>
+                <div className="min-w-0 flex-1">
                   <Link href={`/bot/${bot.id}`}>
-                    <span className="font-medium hover:text-primary transition-colors cursor-pointer">
+                    <span className="font-medium hover:text-primary transition-colors cursor-pointer text-sm sm:text-base truncate block">
                       {bot.name}
                     </span>
                   </Link>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{bot.category}</span>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-current text-yellow-500" />
+                    <span className="truncate">{bot.category}</span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Star className="w-2 h-2 sm:w-3 sm:h-3 fill-current text-yellow-500" />
                       <span>{bot.rating.toFixed(1)}</span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-semibold">${bot.price}</div>
-                <div className="text-xs text-muted-foreground">
-                  {bot.downloads.toLocaleString()} downloads
+              <div className="text-right flex-shrink-0">
+                <div className="font-semibold text-sm sm:text-base">${bot.price}</div>
+                <div className="text-xs text-muted-foreground hidden xs:block">
+                  {bot.downloads > 999 ? `${(bot.downloads/1000).toFixed(1)}k` : bot.downloads} downloads
                 </div>
               </div>
             </motion.div>
@@ -112,35 +112,35 @@ export function TrendingBots({
     return (
       <Card className={className}>
         {showHeader && (
-          <div className="p-4 border-b border-border/50">
+          <div className="p-3 sm:p-4 border-b border-border/50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold">Trending Bots</h3>
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                <h3 className="font-semibold text-sm sm:text-base">Trending Bots</h3>
               </div>
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Flame className="w-3 h-3 text-orange-500" />
+              <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+                <Flame className="w-2 h-2 sm:w-3 sm:h-3 text-orange-500" />
                 Hot
               </Badge>
             </div>
           </div>
         )}
         
-        <div className="p-4 space-y-3">
+        <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
           <AnimatePresence mode="popLayout">
             {displayBots.map((bot, index) => (
               <motion.div
                 key={bot.id}
-                className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors group"
+                className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3 rounded-lg hover:bg-muted/50 transition-colors group"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.02 }}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                   <motion.div
                     className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm",
+                      "w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm",
                       index === 0 ? "bg-yellow-500 text-white" :
                       index === 1 ? "bg-gray-400 text-white" :
                       index === 2 ? "bg-orange-600 text-white" :
@@ -156,33 +156,33 @@ export function TrendingBots({
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
-                      <Flame className="w-4 h-4 text-orange-500" />
+                      <Flame className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500" />
                     </motion.div>
                   )}
                 </div>
                 
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <Link href={`/bot/${bot.id}`}>
-                    <h4 className="font-medium group-hover:text-primary transition-colors cursor-pointer">
+                    <h4 className="font-medium group-hover:text-primary transition-colors cursor-pointer text-sm sm:text-base truncate">
                       {bot.name}
                     </h4>
                   </Link>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <span>{bot.category}</span>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-current text-yellow-500" />
+                  <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
+                    <span className="truncate">{bot.category}</span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Star className="w-2 h-2 sm:w-3 sm:h-3 fill-current text-yellow-500" />
                       <span>{bot.rating.toFixed(1)}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Download className="w-3 h-3" />
-                      <span>{bot.downloads.toLocaleString()}</span>
+                    <div className="flex items-center gap-1 flex-shrink-0 hidden xs:flex">
+                      <Download className="w-2 h-2 sm:w-3 sm:h-3" />
+                      <span>{bot.downloads > 999 ? `${(bot.downloads/1000).toFixed(1)}k` : bot.downloads}</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="text-right">
-                  <div className="font-semibold text-lg">${bot.price}</div>
-                  <Badge variant="outline" className="text-xs">
+                <div className="text-right flex-shrink-0">
+                  <div className="font-semibold text-sm sm:text-lg">${bot.price}</div>
+                  <Badge variant="outline" className="text-xs hidden sm:inline-flex">
                     {bot.trending_score.toFixed(1)}% trending
                   </Badge>
                 </div>
@@ -198,21 +198,21 @@ export function TrendingBots({
   return (
     <div className={className}>
       {showHeader && (
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold">Trending Bots</h2>
+            <TrendingUp className="w-5 h-5 xs:w-6 xs:h-6 text-primary" />
+            <h2 className="text-xl xs:text-2xl font-bold">Trending Bots</h2>
           </div>
           <Link href="/trending">
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="flex items-center gap-2 text-sm">
               View All
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3 h-3 xs:w-4 xs:h-4" />
             </Button>
           </Link>
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
         <AnimatePresence mode="popLayout">
           {displayBots.map((bot, index) => (
             <motion.div
@@ -222,66 +222,67 @@ export function TrendingBots({
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -5 }}
             >
-              <Card className="p-6 h-full hover:shadow-lg transition-shadow group relative overflow-hidden">
+              <Card className="p-4 sm:p-6 h-full hover:shadow-lg transition-shadow group relative overflow-hidden">
                 {/* Trending indicator */}
                 {index < 3 && (
                   <motion.div
-                    className="absolute top-4 right-4"
+                    className="absolute top-3 right-3 sm:top-4 sm:right-4"
                     animate={{ rotate: [0, 10, -10, 0] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
                     <Badge 
                       variant={index === 0 ? "default" : "secondary"}
-                      className="flex items-center gap-1"
+                      className="flex items-center gap-1 text-xs"
                     >
-                      {index === 0 && <Crown className="w-3 h-3" />}
-                      <Flame className="w-3 h-3" />
+                      {index === 0 && <Crown className="w-2 h-2 xs:w-3 xs:h-3" />}
+                      <Flame className="w-2 h-2 xs:w-3 xs:h-3" />
                       #{index + 1}
                     </Badge>
                   </motion.div>
                 )}
                 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <div>
                     <Link href={`/bot/${bot.id}`}>
-                      <h3 className="font-semibold text-lg group-hover:text-primary transition-colors cursor-pointer">
+                      <h3 className="font-semibold text-base sm:text-lg group-hover:text-primary transition-colors cursor-pointer line-clamp-2">
                         {bot.name}
                       </h3>
                     </Link>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">
                       by {bot.developer}
                     </p>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{bot.category}</Badge>
-                    <div className="flex items-center gap-1 text-sm">
-                      <Star className="w-4 h-4 fill-current text-yellow-500" />
+                  <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2">
+                    <Badge variant="outline" className="text-xs">{bot.category}</Badge>
+                    <div className="flex items-center gap-1 text-xs sm:text-sm">
+                      <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-current text-yellow-500" />
                       <span>{bot.rating.toFixed(1)}</span>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <Download className="w-4 h-4" />
-                        <span>{bot.downloads.toLocaleString()}</span>
+                        <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden xs:inline">{bot.downloads.toLocaleString()}</span>
+                        <span className="xs:hidden">{bot.downloads > 999 ? `${(bot.downloads/1000).toFixed(1)}k` : bot.downloads}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <TrendingUp className="w-4 h-4 text-green-500" />
+                        <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                         <span>{bot.trending_score.toFixed(1)}%</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">
+                      <div className="text-lg sm:text-2xl font-bold text-primary">
                         ${bot.price}
                       </div>
                     </div>
                   </div>
                   
                   <Link href={`/bot/${bot.id}`}>
-                    <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <Eye className="w-4 h-4 mr-2" />
+                    <Button className="w-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                       View Details
                     </Button>
                   </Link>

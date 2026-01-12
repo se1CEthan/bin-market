@@ -272,10 +272,10 @@ export function Footer() {
                       className="flex items-center gap-3 mb-4"
                       whileHover={{ scale: 1.05 }}
                     >
-                      <img src={logoUrl} alt="BIN Logo" className="h-12 w-auto" />
+                      <img src={logoUrl} alt="SelTech Logo" className="h-12 w-auto" />
                       <div>
                         <div className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                          BIN Market
+                          SelTech Market
                         </div>
                         <div className="text-sm text-muted-foreground">
                           Bot Intelligence Network
@@ -372,7 +372,7 @@ export function Footer() {
             <div className="container mx-auto px-4 md:px-6">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>© 2024 BIN Market. All rights reserved.</span>
+                  <span>© 2024 SelTech Market. All rights reserved.</span>
                   <Separator orientation="vertical" className="h-4" />
                   <div className="flex items-center gap-1">
                     <span>Made with</span>

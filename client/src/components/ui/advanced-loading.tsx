@@ -345,7 +345,7 @@ export function LoadingScreen({
               repeat: Infinity,
             }}
           >
-            BIN
+            SelTech
           </motion.div>
           <div className="text-xl font-mono">
             {message}

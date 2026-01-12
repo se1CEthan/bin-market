@@ -113,7 +113,7 @@ export function TestBox({ botTitle, botDescription }: TestBoxProps) {
       await simulateStep('✓ Attaching content...', 300);
       await simulateStep(`📤 Sending email to ${userInput}...`, 500);
       await simulateStep('✓ Email sent successfully', 300);
-      await simulateStep(`📊 Message ID: ${Math.random().toString(36).substr(2, 12)}@demo.bin`, 200);
+      await simulateStep(`📊 Message ID: ${Math.random().toString(36).substr(2, 12)}@demo.seltech`, 200);
     }
     
     // AI/GPT Bot Demo

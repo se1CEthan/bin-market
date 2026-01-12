@@ -21,7 +21,7 @@ const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
   sessionTimeout: 3600000, // 1 hour
   passwordMinLength: 12,
   requireMFA: true,
-  allowedOrigins: ['https://bin-market.com'],
+  allowedOrigins: ['https://seltech-market.com'],
 };
 
 // Advanced Password Validation
@@ -363,7 +363,7 @@ export class CSRFProtection {
 
 // Secure Storage
 export class SecureStorage {
-  private static readonly ENCRYPTION_KEY = 'bin-market-secure-key';
+  private static readonly ENCRYPTION_KEY = 'seltech-market-secure-key';
   
   static async setItem(key: string, value: any): Promise<void> {
     try {

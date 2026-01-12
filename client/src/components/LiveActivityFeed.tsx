@@ -61,9 +61,9 @@ export function LiveActivityFeed({
   if (loading) {
     return (
       <Card className={className}>
-        <div className="p-6 flex items-center justify-center">
+        <div className="p-4 sm:p-6 flex items-center justify-center">
           <AdvancedSpinner variant="dots" size="md" />
-          <span className="ml-3 text-muted-foreground">Loading live activity...</span>
+          <span className="ml-3 text-muted-foreground text-sm">Loading live activity...</span>
         </div>
       </Card>
     );
@@ -72,9 +72,9 @@ export function LiveActivityFeed({
   if (error) {
     return (
       <Card className={className}>
-        <div className="p-6 text-center text-muted-foreground">
-          <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
-          <p>Unable to load live activity</p>
+        <div className="p-4 sm:p-6 text-center text-muted-foreground">
+          <Activity className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">Unable to load live activity</p>
         </div>
       </Card>
     );
@@ -85,21 +85,21 @@ export function LiveActivityFeed({
   return (
     <Card className={className}>
       {showHeader && (
-        <div className="p-4 border-b border-border/50">
+        <div className="p-3 sm:p-4 border-b border-border/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Activity className="w-5 h-5 text-primary" />
-              <h3 className="font-semibold">Live Activity</h3>
+              <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              <h3 className="font-semibold text-sm sm:text-base">Live Activity</h3>
             </div>
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse" />
               Live
             </Badge>
           </div>
         </div>
       )}
       
-      <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
+      <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 max-h-80 sm:max-h-96 overflow-y-auto">
         <AnimatePresence mode="popLayout">
           {displayActivities.map((activity, index) => {
             const Icon = activityIcons[activity.type];
@@ -108,7 +108,7 @@ export function LiveActivityFeed({
             return (
               <motion.div
                 key={activity.id}
-                className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg hover:bg-muted/50 transition-colors"
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -121,28 +121,28 @@ export function LiveActivityFeed({
                 layout
               >
                 <motion.div
-                  className={`p-2 rounded-full bg-muted ${colorClass}`}
+                  className={`p-1.5 sm:p-2 rounded-full bg-muted ${colorClass}`}
                   whileHover={{ scale: 1.1 }}
                   transition={{ type: "spring", stiffness: 400 }}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
                 </motion.div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium leading-tight">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium leading-tight">
                         {activity.message}
                       </p>
                       
                       {activity.bot && (
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-1 sm:gap-2 mt-1">
                           <Badge variant="outline" className="text-xs">
                             {activity.bot.category}
                           </Badge>
                           {activity.type === 'bot_reviewed' && (
                             <div className="flex items-center gap-1">
-                              <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                              <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-yellow-500 fill-current" />
                               <span className="text-xs text-muted-foreground">5.0</span>
                             </div>
                           )}
@@ -150,21 +150,22 @@ export function LiveActivityFeed({
                       )}
                     </div>
                     
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="w-3 h-3" />
-                      <span>{formatTimeAgo(activity.timestamp)}</span>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground flex-shrink-0">
+                      <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                      <span className="hidden sm:inline">{formatTimeAgo(activity.timestamp)}</span>
+                      <span className="sm:hidden">{formatTimeAgo(activity.timestamp).replace(' ago', '')}</span>
                     </div>
                   </div>
                   
                   {activity.user && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Avatar className="w-6 h-6">
+                    <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2">
+                      <Avatar className="w-4 h-4 sm:w-6 sm:h-6">
                         <AvatarImage src={activity.user.avatar} />
                         <AvatarFallback className="text-xs">
                           {activity.user.name.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground truncate">
                         {activity.user.name}
                       </span>
                     </div>
@@ -177,23 +178,23 @@ export function LiveActivityFeed({
         
         {displayActivities.length === 0 && (
           <motion.div
-            className="text-center py-8 text-muted-foreground"
+            className="text-center py-6 sm:py-8 text-muted-foreground"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>No recent activity</p>
+            <Activity className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No recent activity</p>
           </motion.div>
         )}
       </div>
       
       {activities.length > maxItems && (
-        <div className="p-4 border-t border-border/50">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="p-3 sm:p-4 border-t border-border/50">
+          <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
             <span>Showing {maxItems} of {activities.length} activities</span>
             <div className="flex items-center gap-1">
-              <TrendingUp className="w-4 h-4" />
-              <span>Live updates</span>
+              <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Live updates</span>
             </div>
           </div>
         </div>

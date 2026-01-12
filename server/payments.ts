@@ -1,11 +1,11 @@
-import { NowPaymentsService } from './services/nowpayments';
+import { cryptomusService } from './services/cryptomus';
 
 // Example: Create a crypto payment invoice for a bot purchase
 export async function createCryptoPayment(botId: string, buyerId: string, amount: number, currency: string = 'usd', returnUrl?: string) {
-  return await NowPaymentsService.createInvoice(botId, buyerId, amount, currency, returnUrl);
+  return await cryptomusService.createInvoice(botId, buyerId, amount, currency, returnUrl);
 }
 
-// Example: Handle IPN callback from NOWPayments
-export async function handleCryptoIPN(ipnData: any) {
-  return await NowPaymentsService.handleIPN(ipnData);
+// Example: Handle webhook callback from Cryptomus
+export async function handleCryptoWebhook(webhookData: any) {
+  return await cryptomusService.checkPaymentStatus(webhookData.uuid);
 }

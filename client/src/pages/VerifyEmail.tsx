@@ -217,7 +217,7 @@ export default function VerifyEmail() {
               Email Verification
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Verify your email address to activate your BIN account
+              Verify your email address to activate your SelTech account
             </CardDescription>
           </CardHeader>
           <CardContent>

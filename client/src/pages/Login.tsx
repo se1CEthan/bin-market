@@ -75,7 +75,7 @@ export default function Login() {
               Welcome Back
             </CardTitle>
             <CardDescription className="text-gray-400">
-              Sign in to your BIN account to continue
+              Sign in to your SelTech account to continue
             </CardDescription>
           </CardHeader>
           <CardContent>

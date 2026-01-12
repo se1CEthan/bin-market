@@ -1,92 +1,98 @@
 import axios from 'axios';
 import crypto from 'crypto';
 
-interface NOWPaymentsConfig {
+interface CryptomusConfig {
   apiKey: string;
-  ipnSecret: string;
+  merchantId: string;
+  webhookSecret: string;
   sandboxMode: boolean;
 }
 
 interface CreatePaymentRequest {
-  price_amount: number;
-  price_currency: string;
-  pay_currency?: string;
+  amount: string;
+  currency: string;
+  network?: string;
   order_id: string;
-  order_description: string;
-  ipn_callback_url: string;
-  success_url: string;
-  cancel_url: string;
-  customer_email?: string;
+  url_return: string;
+  url_callback: string;
+  is_subtract: number;
+  lifetime: number;
+  to_currency?: string;
 }
 
 interface PaymentResponse {
-  payment_id: string;
-  payment_status: string;
-  pay_address: string;
-  pay_amount: number;
-  pay_currency: string;
-  price_amount: number;
-  price_currency: string;
-  payment_url: string;
+  uuid: string;
   order_id: string;
-  order_description: string;
+  amount: string;
+  currency: string;
+  url: string;
+  txid?: string;
+  status: number;
+  is_final: boolean;
   created_at: string;
   updated_at: string;
 }
 
 interface PaymentStatus {
-  payment_id: string;
-  payment_status: string;
-  pay_address: string;
-  pay_amount: number;
-  pay_currency: string;
-  price_amount: number;
-  price_currency: string;
+  uuid: string;
   order_id: string;
-  order_description: string;
-  purchase_id: string;
-  outcome_amount: number;
-  outcome_currency: string;
+  amount: string;
+  currency: string;
+  payer_amount: string;
+  payer_currency: string;
+  status: number;
+  is_final: boolean;
+  txid?: string;
+  network: string;
   created_at: string;
   updated_at: string;
 }
 
 interface SplitPayment {
   address: string;
-  amount: number;
+  amount: string;
   currency: string;
+  network: string;
   description: string;
 }
 
-class NOWPaymentsService {
-  private config: NOWPaymentsConfig;
+class CryptomusService {
+  private config: CryptomusConfig;
   private baseURL: string;
 
   constructor() {
     this.config = {
-      apiKey: process.env.NOWPAYMENTS_API_KEY || '',
-      ipnSecret: process.env.NOWPAYMENTS_IPN_SECRET || 'default-secret',
+      apiKey: process.env.CRYPTOMUS_API_KEY || '',
+      merchantId: process.env.CRYPTOMUS_MERCHANT_ID || '',
+      webhookSecret: process.env.CRYPTOMUS_WEBHOOK_SECRET || 'default-secret',
       sandboxMode: process.env.NODE_ENV !== 'production'
     };
     
-    this.baseURL = this.config.sandboxMode 
-      ? 'https://api-sandbox.nowpayments.io/v1'
-      : 'https://api.nowpayments.io/v1';
+    this.baseURL = 'https://api.cryptomus.com/v1';
 
     // Log configuration status (without exposing sensitive data)
-    console.log('NOWPayments Service initialized:', {
+    console.log('Cryptomus Service initialized:', {
       hasApiKey: !!this.config.apiKey,
+      hasMerchantId: !!this.config.merchantId,
       apiKeyLength: this.config.apiKey.length,
       sandboxMode: this.config.sandboxMode,
       baseURL: this.baseURL
     });
   }
 
-  private getHeaders() {
+  private getHeaders(data?: any) {
+    const sign = this.generateSignature(data);
     return {
-      'x-api-key': this.config.apiKey,
+      'merchant': this.config.merchantId,
+      'sign': sign,
       'Content-Type': 'application/json'
     };
+  }
+
+  private generateSignature(data?: any): string {
+    const dataString = data ? JSON.stringify(data) : '';
+    const signString = Buffer.from(dataString).toString('base64') + this.config.apiKey;
+    return crypto.createHash('md5').update(signString).digest('hex');
   }
 
   /**
@@ -94,10 +100,10 @@ class NOWPaymentsService {
    */
   async getAvailableCurrencies(): Promise<string[]> {
     try {
-      const response = await axios.get(`${this.baseURL}/currencies`, {
+      const response = await axios.get(`${this.baseURL}/exchange-rate/list`, {
         headers: this.getHeaders()
       });
-      return response.data.currencies;
+      return response.data.result || [];
     } catch (error) {
       console.error('Error fetching available currencies:', error);
       throw new Error('Failed to fetch available currencies');
@@ -109,11 +115,19 @@ class NOWPaymentsService {
    */
   async getMinimumAmount(currency: string): Promise<number> {
     try {
-      const response = await axios.get(`${this.baseURL}/min-amount`, {
-        headers: this.getHeaders(),
-        params: { currency_from: currency, currency_to: 'usd' }
-      });
-      return response.data.min_amount;
+      // Cryptomus doesn't have a specific min amount endpoint
+      // Return standard minimums based on currency
+      const minimums: { [key: string]: number } = {
+        'BTC': 0.0001,
+        'ETH': 0.001,
+        'USDT': 1,
+        'USDC': 1,
+        'LTC': 0.01,
+        'BCH': 0.001,
+        'TRX': 10,
+        'BNB': 0.001
+      };
+      return minimums[currency.toUpperCase()] || 1;
     } catch (error) {
       console.error('Error fetching minimum amount:', error);
       throw new Error('Failed to fetch minimum amount');
@@ -135,23 +149,22 @@ class NOWPaymentsService {
       const orderId = `bot_${botId}_${Date.now()}`;
       
       const paymentData: CreatePaymentRequest = {
-        price_amount: botPrice,
-        price_currency: 'USD',
-        pay_currency: preferredCurrency || 'btc',
+        amount: botPrice.toString(),
+        currency: 'USD',
         order_id: orderId,
-        order_description: `Purchase Bot #${botId} - BIN Marketplace`,
-        ipn_callback_url: `${process.env.FRONTEND_URL}/api/payments/nowpayments/webhook`,
-        success_url: `${process.env.FRONTEND_URL}/payment/success/${botId}`,
-        cancel_url: `${process.env.FRONTEND_URL}/bot/${botId}`,
-        customer_email: customerEmail
+        url_return: `${process.env.FRONTEND_URL}/payment/success/${botId}`,
+        url_callback: `${process.env.FRONTEND_URL}/api/payments/cryptomus/webhook`,
+        is_subtract: 1, // Subtract fees from amount
+        lifetime: 3600, // 1 hour lifetime
+        to_currency: preferredCurrency || 'BTC'
       };
 
       const response = await axios.post(`${this.baseURL}/payment`, paymentData, {
-        headers: this.getHeaders()
+        headers: this.getHeaders(paymentData)
       });
 
       // Store payment info for later processing
-      await this.storePaymentInfo(response.data.payment_id, {
+      await this.storePaymentInfo(response.data.result.uuid, {
         botId,
         botPrice,
         developerWallet,
@@ -160,7 +173,7 @@ class NOWPaymentsService {
         customerEmail
       });
 
-      return response.data;
+      return response.data.result;
     } catch (error: any) {
       console.error('Error creating payment:', error.response?.data || error.message);
       throw new Error('Failed to create payment');
@@ -172,10 +185,11 @@ class NOWPaymentsService {
    */
   async getPaymentStatus(paymentId: string): Promise<PaymentStatus> {
     try {
-      const response = await axios.get(`${this.baseURL}/payment/${paymentId}`, {
-        headers: this.getHeaders()
+      const data = { uuid: paymentId };
+      const response = await axios.post(`${this.baseURL}/payment/info`, data, {
+        headers: this.getHeaders(data)
       });
-      return response.data;
+      return response.data.result;
     } catch (error) {
       console.error('Error fetching payment status:', error);
       throw new Error('Failed to fetch payment status');
@@ -194,20 +208,22 @@ class NOWPaymentsService {
   ): Promise<void> {
     try {
       // Calculate splits: 90% to developer, 10% to platform
-      const developerAmount = Math.floor(totalAmount * 0.9 * 100000000) / 100000000; // 8 decimal precision
-      const platformAmount = Math.floor(totalAmount * 0.1 * 100000000) / 100000000;
+      const developerAmount = (totalAmount * 0.9).toFixed(8);
+      const platformAmount = (totalAmount * 0.1).toFixed(8);
 
       const splits: SplitPayment[] = [
         {
           address: developerWallet,
           amount: developerAmount,
           currency: currency,
+          network: this.getNetworkForCurrency(currency),
           description: `Developer payout for payment ${paymentId} (90%)`
         },
         {
           address: platformWallet,
           amount: platformAmount,
           currency: currency,
+          network: this.getNetworkForCurrency(currency),
           description: `Platform commission for payment ${paymentId} (10%)`
         }
       ];
@@ -229,23 +245,38 @@ class NOWPaymentsService {
   }
 
   /**
+   * Get network for currency
+   */
+  private getNetworkForCurrency(currency: string): string {
+    const networks: { [key: string]: string } = {
+      'BTC': 'bitcoin',
+      'ETH': 'ethereum',
+      'USDT': 'tron', // Default to TRC20 for USDT
+      'USDC': 'ethereum',
+      'LTC': 'litecoin',
+      'BCH': 'bitcoin-cash',
+      'TRX': 'tron',
+      'BNB': 'bsc'
+    };
+    return networks[currency.toUpperCase()] || 'ethereum';
+  }
+
+  /**
    * Create a payout to a wallet address
    */
   private async createPayout(split: SplitPayment): Promise<void> {
     try {
       const payoutData = {
-        withdrawals: [
-          {
-            address: split.address,
-            amount: split.amount,
-            currency: split.currency.toLowerCase(),
-            ipn_callback_url: `${process.env.FRONTEND_URL}/api/payments/payout-webhook`
-          }
-        ]
+        amount: split.amount,
+        currency: split.currency,
+        network: split.network,
+        address: split.address,
+        is_subtract: 1,
+        url_callback: `${process.env.FRONTEND_URL}/api/payments/payout-webhook`
       };
 
       await axios.post(`${this.baseURL}/payout`, payoutData, {
-        headers: this.getHeaders()
+        headers: this.getHeaders(payoutData)
       });
 
       console.log(`Payout created: ${split.amount} ${split.currency} to ${split.address}`);
@@ -256,13 +287,13 @@ class NOWPaymentsService {
   }
 
   /**
-   * Verify IPN signature for webhook security
+   * Verify webhook signature for security
    */
-  verifyIPNSignature(payload: string, signature: string): boolean {
+  verifyWebhookSignature(payload: string, signature: string): boolean {
     try {
       const expectedSignature = crypto
-        .createHmac('sha512', this.config.ipnSecret)
-        .update(payload)
+        .createHash('md5')
+        .update(Buffer.from(payload).toString('base64') + this.config.webhookSecret)
         .digest('hex');
       
       return crypto.timingSafeEqual(
@@ -270,7 +301,7 @@ class NOWPaymentsService {
         Buffer.from(expectedSignature, 'hex')
       );
     } catch (error) {
-      console.error('Error verifying IPN signature:', error);
+      console.error('Error verifying webhook signature:', error);
       return false;
     }
   }
@@ -289,24 +320,24 @@ class NOWPaymentsService {
    */
   async getSupportedCurrencies(): Promise<Array<{code: string, name: string, network?: string}>> {
     return [
-      { code: 'btc', name: 'Bitcoin' },
-      { code: 'eth', name: 'Ethereum' },
-      { code: 'ltc', name: 'Litecoin' },
-      { code: 'bch', name: 'Bitcoin Cash' },
-      { code: 'xrp', name: 'Ripple' },
-      { code: 'xlm', name: 'Stellar' },
-      { code: 'ada', name: 'Cardano' },
-      { code: 'dot', name: 'Polkadot' },
-      { code: 'matic', name: 'Polygon' },
-      { code: 'sol', name: 'Solana' },
-      { code: 'usdt', name: 'Tether USD', network: 'ERC20' },
-      { code: 'usdc', name: 'USD Coin', network: 'ERC20' },
-      { code: 'dai', name: 'Dai Stablecoin', network: 'ERC20' },
-      { code: 'busd', name: 'Binance USD', network: 'BEP20' },
-      { code: 'bnb', name: 'Binance Coin' },
-      { code: 'trx', name: 'TRON' },
-      { code: 'doge', name: 'Dogecoin' },
-      { code: 'shib', name: 'Shiba Inu', network: 'ERC20' }
+      { code: 'BTC', name: 'Bitcoin', network: 'bitcoin' },
+      { code: 'ETH', name: 'Ethereum', network: 'ethereum' },
+      { code: 'LTC', name: 'Litecoin', network: 'litecoin' },
+      { code: 'BCH', name: 'Bitcoin Cash', network: 'bitcoin-cash' },
+      { code: 'XRP', name: 'Ripple', network: 'ripple' },
+      { code: 'ADA', name: 'Cardano', network: 'cardano' },
+      { code: 'DOT', name: 'Polkadot', network: 'polkadot' },
+      { code: 'MATIC', name: 'Polygon', network: 'polygon' },
+      { code: 'SOL', name: 'Solana', network: 'solana' },
+      { code: 'USDT', name: 'Tether USD', network: 'tron' },
+      { code: 'USDC', name: 'USD Coin', network: 'ethereum' },
+      { code: 'DAI', name: 'Dai Stablecoin', network: 'ethereum' },
+      { code: 'BUSD', name: 'Binance USD', network: 'bsc' },
+      { code: 'BNB', name: 'Binance Coin', network: 'bsc' },
+      { code: 'TRX', name: 'TRON', network: 'tron' },
+      { code: 'DOGE', name: 'Dogecoin', network: 'dogecoin' },
+      { code: 'SHIB', name: 'Shiba Inu', network: 'ethereum' },
+      { code: 'AVAX', name: 'Avalanche', network: 'avalanche' }
     ];
   }
 
@@ -315,15 +346,17 @@ class NOWPaymentsService {
    */
   async getExchangeRate(fromCurrency: string, toCurrency: string, amount: number): Promise<number> {
     try {
-      const response = await axios.get(`${this.baseURL}/estimate`, {
-        headers: this.getHeaders(),
-        params: {
-          amount,
-          currency_from: fromCurrency,
-          currency_to: toCurrency
-        }
+      const data = {
+        from: fromCurrency.toUpperCase(),
+        to: toCurrency.toUpperCase(),
+        course_source: 'binance'
+      };
+      
+      const response = await axios.post(`${this.baseURL}/exchange-rate/${fromCurrency.toLowerCase()}/${toCurrency.toLowerCase()}`, data, {
+        headers: this.getHeaders(data)
       });
-      return response.data.estimated_amount;
+      
+      return parseFloat(response.data.result.course) * amount;
     } catch (error) {
       console.error('Error fetching exchange rate:', error);
       throw new Error('Failed to fetch exchange rate');
@@ -342,8 +375,8 @@ class NOWPaymentsService {
   ): Promise<any> {
     try {
       // Validate API key
-      if (!this.config.apiKey) {
-        throw new Error('NOWPayments API key is not configured');
+      if (!this.config.apiKey || !this.config.merchantId) {
+        throw new Error('Cryptomus API key or Merchant ID is not configured');
       }
 
       // Validate inputs
@@ -354,7 +387,7 @@ class NOWPaymentsService {
       const orderId = `bot_${botId}_${Date.now()}_${buyerId}`;
       const baseUrl = returnUrl || process.env.FRONTEND_URL || 'http://localhost:5000';
       
-      console.log('Creating NOWPayments invoice with params:', {
+      console.log('Creating Cryptomus invoice with params:', {
         botId,
         buyerId,
         amount,
@@ -364,60 +397,61 @@ class NOWPaymentsService {
       });
 
       const paymentData: CreatePaymentRequest = {
-        price_amount: amount,
-        price_currency: currency.toUpperCase(),
-        pay_currency: 'btc', // Default to Bitcoin, can be changed by user
+        amount: amount.toString(),
+        currency: currency.toUpperCase(),
         order_id: orderId,
-        order_description: `Bot Purchase - ${botId}`,
-        ipn_callback_url: `${baseUrl}/api/nowpayments/webhook`,
-        success_url: `${baseUrl}/payment/success?botId=${botId}`,
-        cancel_url: `${baseUrl}/bot/${botId}`,
+        url_return: `${baseUrl}/payment/success?botId=${botId}`,
+        url_callback: `${baseUrl}/api/cryptomus/webhook`,
+        is_subtract: 1,
+        lifetime: 3600,
+        to_currency: 'BTC' // Default to Bitcoin, can be changed by user
       };
 
-      console.log('Sending request to NOWPayments:', {
+      console.log('Sending request to Cryptomus:', {
         url: `${this.baseURL}/payment`,
         data: paymentData
       });
 
       const response = await axios.post(`${this.baseURL}/payment`, paymentData, {
-        headers: this.getHeaders(),
+        headers: this.getHeaders(paymentData),
         timeout: 30000 // 30 second timeout
       });
 
-      console.log('NOWPayments response received:', {
+      console.log('Cryptomus response received:', {
         status: response.status,
         hasData: !!response.data,
-        paymentId: response.data?.payment_id
+        paymentId: response.data?.result?.uuid
       });
 
       // Transform response to match expected interface
-      const paymentResponse = response.data;
+      const paymentResponse = response.data.result;
       return {
-        id: paymentResponse.payment_id,
-        invoice_url: paymentResponse.payment_url,
-        pay_address: paymentResponse.pay_address,
-        pay_amount: paymentResponse.pay_amount,
-        payCurrency: paymentResponse.pay_currency,
-        price_amount: paymentResponse.price_amount,
-        price_currency: paymentResponse.price_currency,
+        id: paymentResponse.uuid,
+        invoice_url: paymentResponse.url,
+        pay_address: paymentResponse.address || '',
+        pay_amount: paymentResponse.payer_amount || paymentResponse.amount,
+        payCurrency: paymentResponse.payer_currency || paymentResponse.currency,
+        price_amount: paymentResponse.amount,
+        price_currency: paymentResponse.currency,
         order_id: paymentResponse.order_id,
-        payment_status: paymentResponse.payment_status,
+        payment_status: paymentResponse.status,
         created_at: paymentResponse.created_at,
         updated_at: paymentResponse.updated_at
       };
     } catch (error: any) {
-      console.error('NOWPayments createInvoice error:', {
+      console.error('Cryptomus createInvoice error:', {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
         config: {
           hasApiKey: !!this.config.apiKey,
+          hasMerchantId: !!this.config.merchantId,
           baseURL: this.baseURL
         }
       });
       
       if (error.response?.data) {
-        throw new Error(`NOWPayments API error: ${error.response.data.message || JSON.stringify(error.response.data)}`);
+        throw new Error(`Cryptomus API error: ${error.response.data.message || JSON.stringify(error.response.data)}`);
       }
       
       throw new Error(`Failed to create payment invoice: ${error.message}`);
@@ -429,19 +463,20 @@ class NOWPaymentsService {
    */
   async checkPaymentStatus(invoiceId: string): Promise<any> {
     try {
-      const response = await axios.get(`${this.baseURL}/payment/${invoiceId}`, {
-        headers: this.getHeaders()
+      const data = { uuid: invoiceId };
+      const response = await axios.post(`${this.baseURL}/payment/info`, data, {
+        headers: this.getHeaders(data)
       });
 
-      const payment = response.data;
+      const payment = response.data.result;
       return {
-        id: payment.payment_id,
-        status: payment.payment_status,
-        pay_address: payment.pay_address,
-        pay_amount: payment.pay_amount,
-        pay_currency: payment.pay_currency,
-        price_amount: payment.price_amount,
-        price_currency: payment.price_currency,
+        id: payment.uuid,
+        status: payment.status,
+        pay_address: payment.address || '',
+        pay_amount: payment.payer_amount || payment.amount,
+        pay_currency: payment.payer_currency || payment.currency,
+        price_amount: payment.amount,
+        price_currency: payment.currency,
         order_id: payment.order_id,
         created_at: payment.created_at,
         updated_at: payment.updated_at
@@ -453,5 +488,5 @@ class NOWPaymentsService {
   }
 }
 
-export const nowPaymentsService = new NOWPaymentsService();
-export default NOWPaymentsService;
+export const cryptomusService = new CryptomusService();
+export default CryptomusService;

@@ -39,7 +39,7 @@ class ErrorBoundary extends React.Component<
               justifyContent: 'center'
             }}>
               <h1 style={{ color: 'hsl(var(--destructive) / 1)', marginBottom: '20px', fontSize: '2rem' }}>
-            BIN Marketplace - Loading Error
+            SelTech Marketplace - Loading Error
           </h1>
               <p style={{ marginBottom: '20px', color: 'hsl(var(--muted-foreground) / 1)', fontSize: '1.1rem' }}>
             There was an error loading the application. Please try refreshing the page.
@@ -122,7 +122,7 @@ function SimpleFallback() {
           color: 'hsl(var(--foreground) / 1)', 
           marginBottom: '1rem' 
         }}>
-          BIN Marketplace
+          SelTech Marketplace
         </h1>
         <p style={{ 
           fontSize: '1.25rem', 
@@ -204,7 +204,7 @@ if (!rootElement) {
     console.error('Failed to initialize app:', error);
     rootElement.innerHTML = `
       <div style="padding: 40px; text-align: center; font-family: system-ui; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
-        <h1 style="color: #dc2626; margin-bottom: 20px;">BIN Marketplace - Initialization Error</h1>
+        <h1 style="color: #dc2626; margin-bottom: 20px;">SelTech Marketplace - Initialization Error</h1>
         <p style="margin-bottom: 20px; color: #6b7280;">Failed to load the application. Please try refreshing the page.</p>
         <button onclick="window.location.reload()" style="padding: 12px 24px; background-color: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem;">
           Refresh Page

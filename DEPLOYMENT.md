@@ -1,8 +1,8 @@
 # 🚀 BIN Marketplace - Production Deployment Guide
 
-## ✅ PayPal-Only Payment System
+## ✅ Cryptomus-Only Payment System
 
-BIN now uses **PayPal exclusively** for payments, eliminating the Stripe API key error and simplifying deployment.
+BIN now uses **Cryptomus exclusively** for crypto payments, providing secure and reliable cryptocurrency payment processing.
 
 ## 🔧 Required Environment Variables
 
@@ -14,10 +14,10 @@ DATABASE_URL=postgresql://username:password@host:port/database
 # Session Security
 SESSION_SECRET=your-super-secret-session-key-minimum-32-characters
 
-# PayPal Configuration
-PAYPAL_CLIENT_ID=your-paypal-client-id
-PAYPAL_CLIENT_SECRET=your-paypal-client-secret
-PLATFORM_PAYPAL_EMAIL=your-platform-paypal-email@domain.com
+# Cryptomus Configuration (Primary Payment Method)
+CRYPTOMUS_API_KEY=your-cryptomus-api-key
+CRYPTOMUS_MERCHANT_ID=your-cryptomus-merchant-id
+CRYPTOMUS_WEBHOOK_SECRET=your-cryptomus-webhook-secret
 
 # Application URLs
 FRONTEND_URL=https://www.braininspirednetwork.cloud
@@ -29,6 +29,11 @@ NODE_ENV=production
 
 ### Optional Variables
 ```bash
+# PayPal Configuration (Legacy - for existing transactions only)
+PAYPAL_CLIENT_ID=your-paypal-client-id
+PAYPAL_CLIENT_SECRET=your-paypal-client-secret
+PLATFORM_PAYPAL_EMAIL=your-platform-paypal-email@domain.com
+
 # Google OAuth (optional)
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
@@ -51,19 +56,20 @@ npm run db:push
 npm run seed:categories
 ```
 
-### 2. PayPal Configuration
+### 2. Cryptomus Configuration
 
-#### Get PayPal Credentials:
-1. Go to [PayPal Developer Dashboard](https://developer.paypal.com/)
-2. Create a new app
-3. Copy Client ID and Client Secret
-4. Set webhook URL: `https://www.braininspirednetwork.cloud/api/paypal/webhook`
+#### Get Cryptomus Credentials:
+1. Go to [Cryptomus Dashboard](https://cryptomus.com/)
+2. Create a merchant account
+3. Generate API key and get Merchant ID
+4. Set webhook URL: `https://www.braininspirednetwork.cloud/api/cryptomus/webhook`
+5. Generate webhook secret for security
 
 #### Environment Setup:
 ```bash
-PAYPAL_CLIENT_ID=your_client_id_here
-PAYPAL_CLIENT_SECRET=your_client_secret_here
-PLATFORM_PAYPAL_EMAIL=your-business-paypal@email.com
+CRYPTOMUS_API_KEY=your_api_key_here
+CRYPTOMUS_MERCHANT_ID=your_merchant_id_here
+CRYPTOMUS_WEBHOOK_SECRET=your_webhook_secret_here
 ```
 
 ### 3. Build & Deploy
@@ -106,7 +112,7 @@ docker run -p 5000:5000 --env-file .env bin-marketplace
 - ✅ Strong SESSION_SECRET (32+ characters)
 - ✅ HTTPS enabled in production
 - ✅ Secure database connection
-- ✅ PayPal webhook verification
+- ✅ Cryptomus webhook verification
 - ✅ Environment variables secured
 
 ### Database Security:
@@ -136,25 +142,25 @@ EMAIL_PASSWORD=your-password
 ### User Experience:
 1. **Browse** → User browses bot listings
 2. **Purchase** → User clicks "Buy Now"
-3. **PayPal** → Redirected to PayPal checkout
-4. **Payment** → Completes payment on PayPal
+3. **Cryptomus** → Redirected to Cryptomus crypto payment
+4. **Payment** → Completes payment with cryptocurrency
 5. **Return** → Redirected back to marketplace
 6. **Access** → Receives email with license key and download link
 
 ### Technical Flow:
-1. `POST /api/paypal/create-order` - Creates PayPal order
-2. User completes payment on PayPal
-3. `POST /api/paypal/capture-order` - Captures payment
+1. `POST /api/crypto/create-invoice` - Creates Cryptomus invoice
+2. User completes payment with crypto
+3. `POST /api/cryptomus/webhook` - Webhook confirms payment
 4. License key generated automatically
 5. Email sent with download instructions
 6. User can download bot files
 
 ## 🧪 Testing
 
-### Test PayPal Integration:
-1. Use PayPal Sandbox credentials
-2. Create test buyer account
-3. Complete test purchase
+### Test Cryptomus Integration:
+1. Use Cryptomus test environment
+2. Create test payment
+3. Complete test crypto transaction
 4. Verify license generation
 5. Test download functionality
 
@@ -184,10 +190,11 @@ EMAIL_PASSWORD=your-password
 
 ### Common Issues:
 
-#### PayPal Order Creation Fails:
-- Check PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET
-- Verify PayPal app is active
+#### Cryptomus Invoice Creation Fails:
+- Check CRYPTOMUS_API_KEY and CRYPTOMUS_MERCHANT_ID
+- Verify Cryptomus merchant account is active
 - Check network connectivity
+- Ensure webhook URL is correctly configured
 
 #### Email Not Sending:
 - Verify EMAIL_USER and EMAIL_PASSWORD
@@ -209,10 +216,10 @@ EMAIL_PASSWORD=your-password
 ### Deployment Successful When:
 - ✅ Server starts without errors
 - ✅ Database connection established
-- ✅ PayPal orders can be created
+- ✅ Cryptomus invoices can be created
 - ✅ Users can register and login
 - ✅ Email notifications work (or log properly)
-- ✅ Bot purchases complete successfully
+- ✅ Bot purchases complete successfully with crypto
 - ✅ License keys generate correctly
 - ✅ Download links work
 
@@ -221,7 +228,7 @@ EMAIL_PASSWORD=your-password
 ### If You Need Help:
 1. Check server logs for errors
 2. Verify all environment variables
-3. Test PayPal sandbox integration
+3. Test Cryptomus integration
 4. Check database connectivity
 5. Review email configuration
 
@@ -242,11 +249,12 @@ npm run seed:categories  # Add bot categories
 ## 🎯 Final Notes
 
 BIN is now **production-ready** with:
-- ✅ PayPal-only payment processing
+- ✅ Cryptomus crypto payment processing
 - ✅ Real user authentication
 - ✅ Email verification system
 - ✅ License generation and delivery
 - ✅ Secure download system
 - ✅ Professional UI/UX
+- ✅ Automatic crypto payouts to developers
 
-**The marketplace is ready for real users and real transactions!** 🚀
+**The marketplace is ready for real users and real crypto transactions!** 🚀

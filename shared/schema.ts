@@ -73,7 +73,7 @@ export const transactions = pgTable("transactions", {
   developerEarnings: decimal("developer_earnings", { precision: 10, scale: 2 }).notNull(),
   paymentMethod: text("payment_method").notNull(), // crypto, paypal (deprecated)
   paypalOrderId: text("paypal_order_id"), // Deprecated - for legacy PayPal transactions
-  cryptoInvoiceId: text("crypto_invoice_id"), // NOWPayments invoice ID for crypto payments
+  cryptoInvoiceId: text("crypto_invoice_id"), // Cryptomus invoice ID for crypto payments
   status: text("status").notNull().default("pending"), // pending, completed, refunded, failed
   refundReason: text("refund_reason"),
   refundedAt: timestamp("refunded_at"),

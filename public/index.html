@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SelTech - Bot Marketplace</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="assets/img/bin-logo.png" alt="SelTech" class="logo">
+                <span class="brand-text">SelTech Marketplace</span>
+            </div>
+            
+            <div class="nav-menu" id="navMenu">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="#marketplace" class="nav-link">Marketplace</a>
+                <a href="#developers" class="nav-link">Developers</a>
+                <a href="#about" class="nav-link">About</a>
+            </div>
+            
+            <div class="nav-actions">
+                <button class="btn btn-outline" id="loginBtn">Login</button>
+                <button class="btn btn-primary" id="signupBtn">Sign Up</button>
+                <div class="user-menu hidden" id="userMenu">
+                    <img src="" alt="User" class="user-avatar" id="userAvatar">
+                    <span class="user-name" id="userName"></span>
+                    <div class="dropdown">
+                        <button class="dropdown-btn">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-content">
+                            <a href="#dashboard">Dashboard</a>
+                            <a href="#account">Account</a>
+                            <a href="#" id="logoutBtn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="mainContent">
+        <!-- Hero Section -->
+        <section id="home" class="hero">
+            <div class="hero-background">
+                <div class="hero-gradient"></div>
+                <div class="floating-shapes">
+                    <div class="shape shape-1"></div>
+                    <div class="shape shape-2"></div>
+                    <div class="shape shape-3"></div>
+                </div>
+            </div>
+            
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <div class="hero-badge">
+                            <i class="fas fa-check-circle"></i>
+                            Trusted Platform • Enterprise Ready
+                        </div>
+                        
+                        <h1 class="hero-title">
+                            <span>Professional</span>
+                            <span class="gradient-text">Automation Solutions</span>
+                            <span>For Modern Business</span>
+                        </h1>
+                        
+                        <p class="hero-description">
+                            Join thousands of businesses using our verified automation solutions. 
+                            <strong>Enterprise security</strong>, <strong>professional support</strong>, 
+                            and <strong>industry-leading revenue share</strong>.
+                        </p>
+                        
+                        <div class="hero-actions">
+                            <button class="btn btn-primary btn-lg" onclick="navigateToMarketplace()">
+                                <i class="fas fa-sparkles"></i>
+                                Explore Solutions
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                            <button class="btn btn-outline btn-lg" onclick="navigateToDeveloper()">
+                                <i class="fas fa-award"></i>
+                                Start Creating
+                            </button>
+                        </div>
+                        
+                        <div class="trust-indicators">
+                            <div class="trust-item">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Enterprise Security</span>
+                            </div>
+                            <div class="trust-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Verified Solutions</span>
+                            </div>
+                            <div class="trust-item">
+                                <i class="fas fa-bolt"></i>
+                                <span>24/7 Support</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="hero-stats">
+                        <div class="stats-card">
+                            <div class="stats-header">
+                                <div class="live-indicator"></div>
+                                <span>Live Platform Metrics</span>
+                            </div>
+                            
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-number" id="activeSolutions">2,847</div>
+                                    <div class="stat-label">Active Solutions</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number" id="totalDeployments">15,420</div>
+                                    <div class="stat-label">Deployments</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number" id="averageRating">
+                                        4.8<i class="fas fa-star"></i>
+                                    </div>
+                                    <div class="stat-label">Average Rating</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number" id="activeCreators">1,247</div>
+                                    <div class="stat-label">Active Creators</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="success-stories">
+                            <h3><i class="fas fa-trending-up"></i> Success Stories</h3>
+                            <div class="story-list">
+                                <div class="story-item">
+                                    <div class="story-indicator"></div>
+                                    <div class="story-text">
+                                        <strong>TechCorp</strong> automated their entire workflow, 
+                                        saving 40 hours per week and increasing productivity by 300%
+                                    </div>
+                                </div>
+                                <div class="story-item">
+                                    <div class="story-indicator"></div>
+                                    <div class="story-text">
+                                        <strong>StartupXYZ</strong> scaled their operations using our solutions, 
+                                        reducing manual work by 85% and cutting costs by $50K annually
+                                    </div>
+                                </div>
+                                <div class="story-item">
+                                    <div class="story-indicator"></div>
+                                    <div class="story-text">
+                                        <strong>DevStudio</strong> earned over $150K in their first year 
+                                        selling automation solutions on our platform
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Why Choose Our Platform?</h2>
+                    <p>Built for enterprise-grade automation with professional support and industry-leading features</p>
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h3>Instant Deployment</h3>
+                        <p>Deploy automation solutions in minutes with our one-click deployment system. No complex setup required.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Enterprise Security</h3>
+                        <p>Bank-level security with end-to-end encryption, audit trails, and compliance with industry standards.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <h3>90% Revenue Share</h3>
+                        <p>Industry-leading revenue share for creators. Keep 90% of your earnings with transparent payouts.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h3>24/7 Support</h3>
+                        <p>Professional support team available around the clock to help with any questions or issues.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Marketplace Preview -->
+        <section id="marketplace" class="marketplace-preview">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Advanced Marketplace</h2>
+                    <p>Discover, compare, and deploy intelligent automation solutions</p>
+                </div>
+                
+                <div class="marketplace-container">
+                    <div class="marketplace-nav">
+                        <button class="marketplace-tab active" data-tab="trending">
+                            <i class="fas fa-fire"></i>
+                            Trending Now
+                        </button>
+                        <button class="marketplace-tab" data-tab="featured">
+                            <i class="fas fa-crown"></i>
+                            Featured
+                        </button>
+                        <button class="marketplace-tab" data-tab="new">
+                            <i class="fas fa-sparkles"></i>
+                            New Releases
+                        </button>
+                        <button class="marketplace-tab" data-tab="popular">
+                            <i class="fas fa-star"></i>
+                            Most Popular
+                        </button>
+                    </div>
+                    
+                    <div class="marketplace-content">
+                        <div class="bots-grid" id="botsGrid">
+                            <!-- Bots will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta">
+            <div class="cta-background"></div>
+            <div class="container">
+                <div class="cta-content">
+                    <h2>Ready to Transform Your Business?</h2>
+                    <p>Join thousands of businesses already using our platform to automate their workflows and scale their operations</p>
+                    
+                    <div class="cta-actions">
+                        <button class="btn btn-primary btn-lg" onclick="navigateToMarketplace()">
+                            <i class="fas fa-sparkles"></i>
+                            Explore Solutions
+                        </button>
+                        <button class="btn btn-outline btn-lg" onclick="navigateToDeveloper()">
+                            <i class="fas fa-award"></i>
+                            Start Creating
+                        </button>
+                    </div>
+                    
+                    <div class="social-proof">
+                        <p>Trusted by industry leaders</p>
+                        <div class="company-logos">
+                            <div class="company-logo">TechCorp</div>
+                            <div class="company-logo">StartupXYZ</div>
+                            <div class="company-logo">DevStudio</div>
+                            <div class="company-logo">AutoFlow</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-brand">
+                        <img src="assets/img/bin-logo.png" alt="SelTech" class="footer-logo">
+                        <span>SelTech Marketplace</span>
+                    </div>
+                    <p>Professional automation solutions for modern business.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Platform</h4>
+                    <ul>
+                        <li><a href="#marketplace">Browse Bots</a></li>
+                        <li><a href="#developers">For Developers</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#api">API</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#help">Help Center</a></li>
+                        <li><a href="#docs">Documentation</a></li>
+                        <li><a href="#contact">Contact Us</a></li>
+                        <li><a href="#status">Status</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#blog">Blog</a></li>
+                        <li><a href="#careers">Careers</a></li>
+                        <li><a href="#press">Press</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 SelTech Marketplace. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="#privacy">Privacy Policy</a>
+                    <a href="#terms">Terms of Service</a>
+                    <a href="#cookies">Cookie Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Login to SelTech</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Login</button>
+                </form>
+                <div class="auth-divider">
+                    <span>or</span>
+                </div>
+                <button class="btn btn-google btn-full" id="googleLoginBtn">
+                    <i class="fab fa-google"></i>
+                    Continue with Google
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Join SelTech</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="signupForm">
+                    <div class="form-group">
+                        <label for="signupName">Full Name</label>
+                        <input type="text" id="signupName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email</label>
+                        <input type="email" id="signupEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                </form>
+                <div class="auth-divider">
+                    <span>or</span>
+                </div>
+                <button class="btn btn-google btn-full" id="googleSignupBtn">
+                    <i class="fab fa-google"></i>
+                    Continue with Google
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/marketplace.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -7,7 +7,7 @@ import path from "path";
 import { storage } from "./storage";
 import { setupAuth, requireAuth, requireDeveloper, requireAdmin } from "./auth";
 import { AuthService } from "./services/auth";
-import { nowPaymentsService } from "./services/nowpayments";
+import { cryptomusService } from "./services/cryptomus";
 import { LicenseService } from "./services/license";
 import { sendPurchaseConfirmation } from "./services/email";
 
@@ -35,15 +35,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   setupAuth(app);
 
-  // NOWPayments crypto payment routes
-  app.post("/api/nowpayments/create-invoice", requireAuth, async (req, res) => {
+  // Cryptomus crypto payment routes
+  app.post("/api/cryptomus/create-invoice", requireAuth, async (req, res) => {
     try {
       const { botId, amount } = req.body;
       if (!botId || !amount) {
         return res.status(400).json({ error: "Bot ID and amount are required" });
       }
       const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
-      const invoice = await nowPaymentsService.createInvoice(
+      const invoice = await cryptomusService.createInvoice(
         botId,
         (req.user as any).id,
         parseFloat(amount),
@@ -52,7 +52,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.json(invoice);
     } catch (error: any) {
-      console.error('NOWPayments invoice creation error:', error);
+      console.error('Cryptomus invoice creation error:', error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -217,19 +217,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/logout", (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ error: "Failed to logout" });
+  // Cryptomus webhook handler
+  app.post("/api/cryptomus/webhook", async (req, res) => {
+    try {
+      const signature = req.headers['sign'] as string;
+      const payload = JSON.stringify(req.body);
+      
+      // Verify webhook signature
+      if (!cryptomusService.verifyWebhookSignature(payload, signature)) {
+        console.error('Invalid Cryptomus webhook signature');
+        return res.status(400).json({ error: 'Invalid signature' });
       }
-      res.clearCookie('connect.sid');
-      res.json({ message: "Logout successful" });
-    });
+
+      const { uuid, status, order_id, amount, currency } = req.body;
+      
+      console.log('Cryptomus webhook received:', {
+        uuid,
+        status,
+        order_id,
+        amount,
+        currency
+      });
+
+      // Find transaction by crypto invoice ID
+      const transaction = await storage.getTransactionByInvoiceId(uuid);
+      if (!transaction) {
+        console.error('Transaction not found for Cryptomus invoice:', uuid);
+        return res.status(404).json({ error: 'Transaction not found' });
+      }
+
+      // Update transaction status based on Cryptomus status
+      let newStatus = 'pending';
+      if (status === 'paid' || status === 'paid_over') {
+        newStatus = 'completed';
+        
+        // Generate license and increment download count
+        const bot = await storage.getBotById(transaction.botId);
+        if (bot) {
+          const licenseData = await LicenseService.generateLicense(transaction.id, bot.id, transaction.buyerId);
+          await storage.incrementBotDownloads(bot.id);
+
+          // Send confirmation email if user has email
+          try {
+            const buyer = await storage.getUser(transaction.buyerId);
+            if (buyer?.email) {
+              await sendPurchaseConfirmation(
+                buyer.email,
+                buyer.name,
+                bot.title,
+                transaction.id,
+                transaction.amount,
+                licenseData.licenseKey,
+                licenseData.downloadUrl,
+                licenseData.maxDownloads
+              );
+            }
+          } catch (emailErr) {
+            console.error('Failed to send purchase confirmation email:', emailErr);
+          }
+        }
+      } else if (status === 'fail' || status === 'cancel') {
+        newStatus = 'failed';
+      }
+
+      await storage.updateTransactionStatus(transaction.id, newStatus);
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Cryptomus webhook error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Legacy NOWPayments webhook (for backward compatibility)
+  app.post("/api/nowpayments/webhook", async (req, res) => {
+    console.log('Legacy NOWPayments webhook called - redirecting to Cryptomus');
+    res.status(410).json({ error: 'NOWPayments integration deprecated, use Cryptomus' });
   });
 
 
 
-  // Enhanced NOWPayments crypto routes (Primary Payment Method)
+  // Enhanced Cryptomus crypto routes (Primary Payment Method)
   app.post("/api/crypto/create-invoice", requireAuth, async (req, res) => {
     try {
       const { botId, amount } = req.body;
@@ -240,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Use request origin as a fallback for return URLs when FRONTEND_URL is not configured
       const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
-      const invoice = await nowPaymentsService.createInvoice(
+      const invoice = await cryptomusService.createInvoice(
         botId,
         (req.user as any).id,
         parseFloat(amount),
@@ -250,7 +318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(invoice);
     } catch (error: any) {
-      console.error('NOWPayments invoice creation error:', error);
+      console.error('Cryptomus invoice creation error:', error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -263,10 +331,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invoice ID is required" });
       }
 
-      const result = await nowPaymentsService.checkPaymentStatus(invoiceId);
+      const result = await cryptomusService.checkPaymentStatus(invoiceId);
       res.json(result);
     } catch (error: any) {
-      console.error('NOWPayments status check error:', error);
+      console.error('Cryptomus status check error:', error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -1322,12 +1390,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ success: true, transaction, license: licenseData });
       }
 
-      // Create NOWPayments invoice via internal nowPaymentsService directly
-      console.log('Creating NOWPayments invoice (server-side) for bot:', bot.id, 'price:', bot.price);
-      const cryptoInvoice = await nowPaymentsService.createInvoice(bot.id, (req.user as any).id, amount, 'usd');
-      console.log('NOWPayments invoice response (server-side):', cryptoInvoice && cryptoInvoice.id ? `id=${cryptoInvoice.id}` : JSON.stringify(cryptoInvoice).slice(0, 2000));
+      // Create Cryptomus invoice via internal cryptomusService directly
+      console.log('Creating Cryptomus invoice (server-side) for bot:', bot.id, 'price:', bot.price);
+      const cryptoInvoice = await cryptomusService.createInvoice(bot.id, (req.user as any).id, amount, 'usd');
+      console.log('Cryptomus invoice response (server-side):', cryptoInvoice && cryptoInvoice.id ? `id=${cryptoInvoice.id}` : JSON.stringify(cryptoInvoice).slice(0, 2000));
 
-      // Create or reuse transaction record (nowPaymentsService may have already created one)
+      // Create or reuse transaction record (cryptomusService may have already created one)
       let transaction = await storage.getTransactionByInvoiceId(cryptoInvoice.id);
       if (!transaction) {
         transaction = await storage.createTransaction({
@@ -1508,6 +1576,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(bot);
     } catch (error) {
       res.status(500).json({ error: "Failed to update bot status" });
+    }
+  });
+
+  // Cryptomus webhook handler
+  app.post("/api/cryptomus/webhook", async (req, res) => {
+    try {
+      const signature = req.headers['sign'] as string;
+      const payload = JSON.stringify(req.body);
+      
+      // Verify webhook signature
+      if (!cryptomusService.verifyWebhookSignature(payload, signature)) {
+        console.error('Invalid Cryptomus webhook signature');
+        return res.status(400).json({ error: 'Invalid signature' });
+      }
+
+      const { uuid, status, order_id, amount, currency } = req.body;
+      
+      console.log('Cryptomus webhook received:', {
+        uuid,
+        status,
+        order_id,
+        amount,
+        currency
+      });
+
+      // Find transaction by crypto invoice ID
+      const transaction = await storage.getTransactionByInvoiceId(uuid);
+      if (!transaction) {
+        console.error('Transaction not found for Cryptomus invoice:', uuid);
+        return res.status(404).json({ error: 'Transaction not found' });
+      }
+
+      // Update transaction status based on Cryptomus status
+      let newStatus = 'pending';
+      if (status === 'paid' || status === 'paid_over') {
+        newStatus = 'completed';
+        
+        // Generate license and increment download count
+        const bot = await storage.getBotById(transaction.botId);
+        if (bot) {
+          const licenseData = await LicenseService.generateLicense(transaction.id, bot.id, transaction.buyerId);
+          await storage.incrementBotDownloads(bot.id);
+
+          // Send confirmation email if user has email
+          try {
+            const buyer = await storage.getUser(transaction.buyerId);
+            if (buyer?.email) {
+              await sendPurchaseConfirmation(
+                buyer.email,
+                buyer.name,
+                bot.title,
+                transaction.id,
+                transaction.amount,
+                licenseData.licenseKey,
+                licenseData.downloadUrl,
+                licenseData.maxDownloads
+              );
+            }
+          } catch (emailErr) {
+            console.error('Failed to send purchase confirmation email:', emailErr);
+          }
+        }
+      } else if (status === 'fail' || status === 'cancel') {
+        newStatus = 'failed';
+      }
+
+      await storage.updateTransactionStatus(transaction.id, newStatus);
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Cryptomus webhook error:', error);
+      res.status(500).json({ error: error.message });
     }
   });
 
